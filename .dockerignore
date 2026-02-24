@@ -1,3 +1,24 @@
-# Everything except docker-entrypoint.sh
-*
-!docker-entrypoint.sh
+# Dependencies
+node_modules/
+.git/
+
+# Content (synced separately)
+content/
+
+# Secrets & environment
+.env
+config.json
+*.pem
+*.key
+*.pub
+content_deploy_key*
+
+# Development
+.serena/
+.claude/
+.playwright-mcp/
+*.log
+
+# Build artifacts (we'll rebuild these)
+# Keep public/ and templates/ for the Docker build
+# Keep server/ for the Docker build
