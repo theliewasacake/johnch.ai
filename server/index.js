@@ -62,6 +62,16 @@ app.use('/admin', editorRoutes);
 app.use('/admin', uploadRoutes);
 app.use('/admin', configRoutes);
 
+// 404 catch-all — serve the built 404 page
+app.use((req, res) => {
+  const page404 = path.join(__dirname, '..', 'public', '404.html');
+  res.status(404).sendFile(page404, (err) => {
+    if (err) {
+      res.status(404).send('Not Found');
+    }
+  });
+});
+
 app.listen(PORT, () => {
   console.log(`Server running at http://localhost:${PORT}`);
   console.log(`Admin panel at http://localhost:${PORT}/admin/`);

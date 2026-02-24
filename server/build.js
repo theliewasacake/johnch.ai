@@ -476,8 +476,10 @@ function buildAboutPage(partials) {
   }
 
   // Build intro section with photo and contact
-  const photoPath = aboutData.photo || '/about/photo.jpg';
-  const photoExists = fs.existsSync(path.join(CONTENT_DIR, photoPath.substring(1))); // Remove leading /
+  const photoPath = aboutData.photo || '/images/about/photo.jpg';
+  // Check both content/images/about/ and public/images/about/ for the photo
+  const photoExists = fs.existsSync(path.join(CONTENT_DIR, 'images', 'about', 'photo.jpg'))
+    || fs.existsSync(path.join(PUBLIC_DIR, 'images', 'about', 'photo.jpg'));
   
   let introSection = '';
   if (photoExists && contactItems.length > 0) {
@@ -584,6 +586,33 @@ function buildGraphData(posts, projects) {
   const data = { nodes, edges };
   fs.writeFileSync(path.join(PUBLIC_DIR, 'graph-data.json'), JSON.stringify(data, null, 2));
   console.log('  Built: /graph-data.json');
+}
+
+// --- Build 404 Page ---
+
+function build404Page(partials) {
+  const base = loadTemplate('base.html');
+
+  const content = `
+  <section class="container" style="padding: var(--space-2xl) 0; text-align: center;">
+    <div class="section-header__label">Error 404</div>
+    <h1 style="font-family: var(--font-heading); font-size: 4rem; margin: var(--space-md) 0;">Page Not Found</h1>
+    <p style="color: var(--text-secondary); margin-bottom: var(--space-lg);">The requested path does not exist.</p>
+    <a href="/" class="nav__link" style="font-family: var(--font-mono); font-size: 0.85rem;">← Return to homepage</a>
+  </section>`;
+
+  const html = buildPage(base, {
+    title: '404 — Not Found',
+    description: 'Page not found',
+    content,
+    'nav-home': '',
+    'nav-blog': '',
+    'nav-projects': '',
+    'nav-about': '',
+  }, partials);
+
+  fs.writeFileSync(path.join(PUBLIC_DIR, '404.html'), html);
+  console.log('  Built: /404.html');
 }
 
 // --- Build RSS ---
@@ -703,6 +732,7 @@ function build() {
   buildProjectPages(projects, posts, partials);
   buildGraphData(posts, projects);
   buildRSS(posts);
+  build404Page(partials);
 
   console.log('✓ Build complete');
 }

@@ -585,10 +585,7 @@
       return document.getElementById('slug').value.trim() || 'uploads';
     }
 
-    document.getElementById('image-upload').addEventListener('change', async function(e) {
-      var file = e.target.files[0];
-      if (!file) return;
-
+    async function uploadAndInsertImage(file) {
       var uploadSlug = getUploadSlug();
       var formData = new FormData();
       formData.append('image', file);
@@ -605,12 +602,10 @@
         });
         var data = await res.json();
         if (data.ok) {
-          // Insert markdown image at cursor
           var markdown = '![' + file.name + '](' + data.url + ')';
           editor.codemirror.replaceSelection(markdown);
           statusEl.textContent = 'Uploaded!';
           statusEl.className = 'status-msg status-msg--success';
-          // Refresh media browser if open
           if (document.getElementById('media-browser').classList.contains('media-browser--open')) {
             loadMediaBrowser();
           }
@@ -624,7 +619,46 @@
       }
 
       setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
-      e.target.value = ''; // Reset file input
+    }
+
+    document.getElementById('image-upload').addEventListener('change', async function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+      await uploadAndInsertImage(file);
+      e.target.value = '';
+    });
+
+    // Drag-and-drop images into the editor
+    editor.codemirror.on('drop', function(cm, e) {
+      var files = e.dataTransfer && e.dataTransfer.files;
+      if (!files || files.length === 0) return;
+
+      var imageFiles = Array.from(files).filter(function(f) {
+        return f.type.startsWith('image/');
+      });
+      if (imageFiles.length === 0) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      imageFiles.forEach(function(file) {
+        uploadAndInsertImage(file);
+      });
+    });
+
+    // Paste images into the editor
+    editor.codemirror.on('paste', function(cm, e) {
+      var items = e.clipboardData && e.clipboardData.items;
+      if (!items) return;
+
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type.startsWith('image/')) {
+          e.preventDefault();
+          var file = items[i].getAsFile();
+          if (file) uploadAndInsertImage(file);
+          return;
+        }
+      }
     });
 
     // Media browser

@@ -58,7 +58,12 @@ if [ -n "$CONTENT_REPO_URL" ] && setup_ssh_for_content; then
     fi
     
     git clone "$CONTENT_REPO_URL" "$CONTENT_DIR"
-    
+
+    # Configure git identity for commits from the admin editor
+    cd "$CONTENT_DIR"
+    git config user.email "${GIT_USER_EMAIL:-admin@blog.local}"
+    git config user.name "${GIT_USER_NAME:-Blog Admin}"
+
     # Ensure we're back in /app
     cd /app
     echo "Content repository ready."

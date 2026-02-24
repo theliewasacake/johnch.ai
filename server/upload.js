@@ -153,9 +153,10 @@ router.get('/api/resume-status', (req, res) => {
 
 const photoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const dir = path.join(CONTENT_DIR, 'about');
-    fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
+    // Store in content/images/about/ for git backup
+    const contentDir = path.join(CONTENT_DIR, 'images', 'about');
+    fs.mkdirSync(contentDir, { recursive: true });
+    cb(null, contentDir);
   },
   filename: (req, file, cb) => {
     cb(null, 'photo.jpg');
@@ -176,9 +177,9 @@ router.post('/api/upload-photo', photoUpload.single('photo'), (req, res) => {
     return res.status(400).json({ ok: false, error: 'No valid image uploaded' });
   }
 
-  // Also copy to public/about for serving
+  // Copy to public/images/about/ for serving (this path is persisted via Docker volume)
   try {
-    const publicDestDir = path.join(PUBLIC_DIR, 'about');
+    const publicDestDir = path.join(PUBLIC_DIR, 'images', 'about');
     fs.mkdirSync(publicDestDir, { recursive: true });
     fs.copyFileSync(req.file.path, path.join(publicDestDir, req.file.filename));
   } catch (err) {
@@ -188,7 +189,7 @@ router.post('/api/upload-photo', photoUpload.single('photo'), (req, res) => {
   // Sync to git
   const gitResult = syncImageToGit(req.file.path);
 
-  res.json({ ok: true, url: '/about/photo.jpg', git: gitResult });
+  res.json({ ok: true, url: '/images/about/photo.jpg', git: gitResult });
 });
 
 // --- Favicon Uploads ---

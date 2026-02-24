@@ -20,6 +20,9 @@ services:
       - CONTENT_REPO_URL=${CONTENT_REPO_URL}
       # Base64-encoded deploy key for private content repo
       - CONTENT_DEPLOY_KEY=${CONTENT_DEPLOY_KEY}
+      # Git committer identity for content repo commits
+      - GIT_USER_EMAIL=${GIT_USER_EMAIL}
+      - GIT_USER_NAME=${GIT_USER_NAME}
     volumes:
       # Persist uploaded images only (content is cloned fresh from git)
       - images_data:/app/public/images
