@@ -10,6 +10,9 @@ const configRoutes = require('./config');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust reverse proxy (nginx/Traefik) for secure cookies
+app.set('trust proxy', 1);
+
 // Session config
 app.use(session({
   secret: process.env.SESSION_SECRET || 'change-this-in-production',
