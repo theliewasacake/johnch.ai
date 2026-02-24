@@ -1,0 +1,71 @@
+{
+  "site": {
+    "name": "example.com",
+    "title": "Personal Website",
+    "description": "Personal website - blog, projects, about",
+    "baseUrl": "https://example.com"
+  },
+  "author": {
+    "name": "Your Name",
+    "email": "contact@example.com",
+    "githubUsername": "your-github-username",
+    "githubProfileUrl": "https://github.com/your-github-username"
+  },
+  "homepage": {
+    "heroLabel": "System Online",
+    "heroTitle": "Your Name",
+    "heroSubtitle": "Write a description of yourself here."
+  },
+  "sections": {
+    "blog": {
+      "title": "Blog",
+      "description": "Articles and thoughts",
+      "sectorLabel": "Sector: Recent Articles"
+    },
+    "projects": {
+      "title": "Projects",
+      "description": "Things I've built",
+      "sectorLabel": "Sector: Projects"
+    },
+    "about": {
+      "title": "About",
+      "description": ""
+    }
+  },
+  "rss": {
+    "title": "example.com",
+    "description": "Articles by Your Name"
+  },
+  "theme": {
+    "light": {
+      "bgPrimary": "#F8F8F6",
+      "bgSecondary": "#EEEEE8",
+      "bgTertiary": "#E4E4DC",
+      "linePrimary": "#C8C8C0",
+      "lineAccent": "#2A2A2A",
+      "accentRed": "#CC2020",
+      "accentRedHover": "#A01818",
+      "accentBlue": "#1A56DB",
+      "textPrimary": "#1A1A1A",
+      "textSecondary": "#5A5A5A",
+      "textMuted": "#8A8A82",
+      "bgCode": "#F0F0EA",
+      "shadow": "0 1px 3px rgba(0,0,0,0.06)"
+    },
+    "dark": {
+      "bgPrimary": "#141414",
+      "bgSecondary": "#1E1E1E",
+      "bgTertiary": "#282828",
+      "linePrimary": "#3A3A3A",
+      "lineAccent": "#D0D0D0",
+      "accentRed": "#E04040",
+      "accentRedHover": "#FF5555",
+      "accentBlue": "#4B8BFF",
+      "textPrimary": "#E8E8E8",
+      "textSecondary": "#A0A0A0",
+      "textMuted": "#6A6A6A",
+      "bgCode": "#1A1A1A",
+      "shadow": "0 1px 3px rgba(0,0,0,0.3)"
+    }
+  }
+}

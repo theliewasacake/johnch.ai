@@ -1,1 +1,29 @@
+# Content (separate git repo)
 /content/*
+
+# Dependencies
+node_modules/
+
+# Environment & Configuration
+.env
+config.json
+*.log
+
+# Secrets (deploy keys, credentials)
+secrets/
+
+# Generated files in public/
+public/*.html
+public/blog/
+public/projects/
+public/images/
+public/about/
+public/resume/
+public/favicons/
+public/graph-data.json
+public/rss.xml
+
+# Claude
+.claude/
+.serena/
+.playwright-mcp/

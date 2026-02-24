@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{{head}}
+</head>
+<body>
+{{nav}}
+<main>
+  <div class="container">
+    <header class="page-header page-header--full-width">
+      <div class="section-header__label">Sector: Projects</div>
+      <h1>Projects</h1>
+      <div class="section-header__line"></div>
+    </header>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <input type="text" class="filter-bar__input" placeholder="Search projects..." id="search-input">
+      <div class="filter-bar__tags" id="tag-filters">
+        {{tagList}}
+      </div>
+    </div>
+
+    <div class="grid grid--2col" id="card-grid">
+      {{projects}}
+    </div>
+    <div class="filter-bar__empty" id="filter-empty">No matching projects found</div>
+  </div>
+</main>
+{{footer}}
+<script src="/js/filter.js"></script>
+</body>
+</html>

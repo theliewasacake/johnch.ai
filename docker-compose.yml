@@ -1,0 +1,40 @@
+services:
+  web:
+    build: .
+    container_name: ${CONTAINER_NAME:-blog-site}
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Node environment (production recommended for deployed instances)
+      - NODE_ENV=production
+      # Server port (must match ports mapping above)
+      - PORT=3000
+      # Bcrypt hash of admin password (generate with: node -e "console.log(require('bcrypt').hashSync('yourpassword', 10))")
+      - ADMIN_PASSWORD_HASH=${ADMIN_PASSWORD_HASH}
+      # Secret for Express sessions (use a long random string)
+      - SESSION_SECRET=${SESSION_SECRET}
+      # Main application repo URL (for updates/rebuilds)
+      - REPO_URL=${REPO_URL}
+      # Content repo URL (private repo with blog posts, projects, about page)
+      # Uses SSH for authenticated access via deploy key
+      - CONTENT_REPO_URL=${CONTENT_REPO_URL}
+    volumes:
+      # Persist content (markdown files) - survives container restarts
+      - content_data:/app/content
+      # Persist uploaded images
+      - images_data:/app/public/images
+      # Deploy key for content repo - CONFIGURE ON HOST SYSTEM, NOT IN REPO
+      # For TrueNAS: mount from /mnt/tank/johnch-ai-secrets/content_deploy_key
+      # For local dev: use CONTENT_DEPLOY_KEY env var (base64-encoded) instead
+      # - /path/on/host/content_deploy_key:/secrets/content_deploy_key:ro
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s  # Give time for git clone + npm install + build
+
+volumes:
+  content_data:
+  images_data:

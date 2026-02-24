@@ -1,0 +1,233 @@
+/* === Glitch Effect === */
+/* CSS image glitch effect with horizontal strip distortion and particles */
+
+/* Wrapper container for glitch effect */
+.glitch-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  overflow: hidden;
+}
+
+/* Individual horizontal strips with clip-path for tearing effect */
+.glitch-strip {
+  position: absolute;
+  width: 100%;
+  height: 16.67%; /* 6 strips = 16.67% each */
+  top: calc(var(--strip-index, 0) * 16.67%);
+  left: 0;
+  background-position: 0 var(--strip-offset);
+  background-size: 100% 600%; /* 6x height to match strip count */
+  background-repeat: no-repeat;
+  background: linear-gradient(90deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.02) 100%);
+  opacity: 0;
+}
+
+/* Light theme - white particles */
+@media (prefers-color-scheme: light) {
+  .glitch-particle {
+    background: #ff0000 !important;
+  }
+}
+
+/* Dark theme - red particles */
+@media (prefers-color-scheme: dark) {
+  .glitch-particle {
+    background: #ffffff !important;
+  }
+}
+
+/* Glitch animations with randomized offsets and hue shifts */
+@keyframes glitch-x-1 {
+  0%, 100% { 
+    transform: translateX(0) skewX(0deg); 
+    clip-path: inset(0 0 0 0);
+  }
+  20% { 
+    transform: translateX(-4px) skewX(-2deg);
+    clip-path: inset(0 0 0 0);
+  }
+  40% { 
+    transform: translateX(4px) skewX(2deg);
+    clip-path: inset(0 0 0 0);
+  }
+  60% { 
+    transform: translateX(-3px) skewX(-1.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+  80% { 
+    transform: translateX(3px) skewX(1.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes glitch-x-2 {
+  0%, 100% { 
+    transform: translateX(0) skewX(0deg);
+    clip-path: inset(0 0 0 0);
+  }
+  15% { 
+    transform: translateX(5px) skewX(2.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+  35% { 
+    transform: translateX(-5px) skewX(-2.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+  55% { 
+    transform: translateX(3px) skewX(1.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+  75% { 
+    transform: translateX(-3px) skewX(-1.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes glitch-x-3 {
+  0%, 100% { 
+    transform: translateX(0) skewX(0deg);
+    clip-path: inset(0 0 0 0);
+  }
+  25% { 
+    transform: translateX(-2px) skewX(-1deg);
+    clip-path: inset(0 0 0 0);
+  }
+  45% { 
+    transform: translateX(2px) skewX(1deg);
+    clip-path: inset(0 0 0 0);
+  }
+  65% { 
+    transform: translateX(-4px) skewX(-2deg);
+    clip-path: inset(0 0 0 0);
+  }
+  85% { 
+    transform: translateX(4px) skewX(2deg);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes glitch-x-4 {
+  0%, 100% { 
+    transform: translateX(0) skewX(0deg);
+    clip-path: inset(0 0 0 0);
+  }
+  10% { 
+    transform: translateX(3px) skewX(1.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+  30% { 
+    transform: translateX(-3px) skewX(-1.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+  50% { 
+    transform: translateX(2px) skewX(1deg);
+    clip-path: inset(0 0 0 0);
+  }
+  70% { 
+    transform: translateX(-2px) skewX(-1deg);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes glitch-x-5 {
+  0%, 100% { 
+    transform: translateX(0) skewX(0deg);
+    clip-path: inset(0 0 0 0);
+  }
+  18% { 
+    transform: translateX(-5px) skewX(-2.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+  38% { 
+    transform: translateX(5px) skewX(2.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+  58% { 
+    transform: translateX(-3px) skewX(-1.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+  78% { 
+    transform: translateX(3px) skewX(1.5deg);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes glitch-x-6 {
+  0%, 100% { 
+    transform: translateX(0) skewX(0deg);
+    clip-path: inset(0 0 0 0);
+  }
+  22% { 
+    transform: translateX(2px) skewX(1deg);
+    clip-path: inset(0 0 0 0);
+  }
+  42% { 
+    transform: translateX(-2px) skewX(-1deg);
+    clip-path: inset(0 0 0 0);
+  }
+  62% { 
+    transform: translateX(4px) skewX(2deg);
+    clip-path: inset(0 0 0 0);
+  }
+  82% { 
+    transform: translateX(-4px) skewX(-2deg);
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Active glitch state */
+.glitch-active .glitch-strip {
+  opacity: 1;
+}
+
+.glitch-active .glitch-strip:nth-child(1) {
+  animation: glitch-x-1 var(--glitch-duration-1, 0.3s) ease-out;
+}
+
+.glitch-active .glitch-strip:nth-child(2) {
+  animation: glitch-x-2 var(--glitch-duration-2, 0.35s) ease-out;
+}
+
+.glitch-active .glitch-strip:nth-child(3) {
+  animation: glitch-x-3 var(--glitch-duration-3, 0.32s) ease-out;
+}
+
+.glitch-active .glitch-strip:nth-child(4) {
+  animation: glitch-x-4 var(--glitch-duration-4, 0.38s) ease-out;
+}
+
+.glitch-active .glitch-strip:nth-child(5) {
+  animation: glitch-x-5 var(--glitch-duration-5, 0.33s) ease-out;
+}
+
+.glitch-active .glitch-strip:nth-child(6) {
+  animation: glitch-x-6 var(--glitch-duration-6, 0.36s) ease-out;
+}
+
+/* Particle animation */
+@keyframes glitch-particle {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: translate(var(--vx), var(--vy)) scale(0.8);
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(var(--vx) * 1.8), var(--vy)) scale(0.3);
+  }
+}
+
+.glitch-particle {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: glitch-particle 0.4s ease-out forwards;
+}

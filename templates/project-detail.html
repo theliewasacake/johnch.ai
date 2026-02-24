@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{{head}}
+</head>
+<body>
+{{nav}}
+<main>
+  <div class="container">
+    <header class="page-header">
+      <div class="section-header__label">Project // {{status}}</div>
+      <h1>{{title}}</h1>
+      <p class="text-secondary" style="margin-top: var(--space-sm);">{{description}}</p>
+      <div class="post-card__tags" style="margin-top: var(--space-md);">
+        {{tech}}
+      </div>
+      {{projectLinks}}
+    </header>
+
+    {{hero}}
+
+    <div class="prose">
+      {{content}}
+    </div>
+
+    {{postsSection}}
+  </div>
+</main>
+{{footer}}
+</body>
+</html>

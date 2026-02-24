@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{{head}}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1/styles/github.min.css">
+</head>
+<body>
+<div class="reading-progress" id="reading-progress"></div>
+{{nav}}
+<main>
+  <article class="container">
+    <header class="page-header">
+      <div class="section-header__label">Article // {{date}}</div>
+      <div class="page-header__title-row">
+        <h1>{{title}}</h1>
+        {{projectBanner}}
+      </div>
+      <p class="text-secondary" style="margin-top: var(--space-sm);">{{description}}</p>
+      <div class="post-card__tags" style="margin-top: var(--space-md);">
+        {{tags}}
+      </div>
+    </header>
+    {{relatedPostsTop}}
+    <div class="prose">
+      {{content}}
+    </div>
+    <hr class="divider">
+    {{relatedPostsBottom}}
+  </article>
+</main>
+{{footer}}
+<script src="/js/reading-progress.js"></script>
+</body>
+</html>

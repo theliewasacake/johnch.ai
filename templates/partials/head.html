@@ -1,0 +1,61 @@
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{title}} — {{site-name}}</title>
+<meta name="description" content="{{description}}">
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Styles -->
+<link rel="stylesheet" href="/css/global.css">
+<link rel="stylesheet" href="/css/theme.css">
+<link rel="stylesheet" href="/css/panel-lines.css">
+<link rel="stylesheet" href="/css/glitch.css">
+
+<!-- Theme: apply before render to prevent flash -->
+<script>
+  (function() {
+    var t = localStorage.getItem('theme');
+    if (t) { document.documentElement.setAttribute('data-theme', t); }
+    else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      document.documentElement.setAttribute('data-theme', 'dark');
+    }
+  })();
+</script>
+
+<!-- RSS -->
+<link rel="alternate" type="application/rss+xml" title="{{site-name}} RSS" href="/rss.xml">
+
+<!-- Favicon -->
+<link id="favicon" rel="icon" href="/favicons/favicon.svg" type="image/svg+xml">
+<script>
+  (function() {
+    const updateFavicon = () => {
+      const theme = document.documentElement.getAttribute('data-theme') ||
+                    (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      const faviconEl = document.getElementById('favicon');
+      const navLogoEl = document.getElementById('nav-logo-icon');
+      faviconEl.href = theme === 'dark' ? '/favicons/favicon-dark.svg' : '/favicons/favicon.svg';
+      if (navLogoEl) {
+        navLogoEl.src = theme === 'dark' ? '/favicons/favicon-dark.svg' : '/favicons/favicon.svg';
+      }
+    };
+
+    // Set initial favicon and nav logo
+    updateFavicon();
+
+    // Update nav logo when DOM is ready (in case nav element doesn't exist yet)
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', updateFavicon);
+    }
+
+    // Watch for theme changes
+    const observer = new MutationObserver(() => updateFavicon());
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  })();
+</script>
+
+<!-- Glitch Effects -->
+<script src="/js/glitch.js"></script>

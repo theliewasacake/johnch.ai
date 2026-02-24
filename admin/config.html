@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Site Config</title>
+  <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/panel-lines.css">
+  <link rel="stylesheet" href="/css/glitch.css">
+  <script>
+    // Apply theme before render to prevent flash
+    (function() {
+      var theme = localStorage.getItem('admin-theme');
+      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <style>
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-lg) 0;
+      border-bottom: 1px solid var(--line-primary);
+      margin-bottom: var(--space-xl);
+    }
+    .editor-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xl);
+    }
+    .section-group {
+      border: 1px solid var(--line-primary);
+      padding: var(--space-lg);
+      background: var(--bg-secondary);
+    }
+    .section-group__title {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: var(--space-lg);
+      padding-bottom: var(--space-md);
+      border-bottom: 1px solid var(--line-primary);
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-md);
+    }
+    .field:last-child {
+      margin-bottom: 0;
+    }
+    .field__label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .field__input {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--line-primary);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      outline: none;
+    }
+    .field__input:focus {
+      border-color: var(--accent-red);
+    }
+    .field__color {
+      display: flex;
+      gap: var(--space-md);
+      align-items: center;
+    }
+    .color-input {
+      width: 60px;
+      height: 40px;
+      border: 1px solid var(--line-primary);
+      cursor: pointer;
+    }
+    .color-value {
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      flex: 1;
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--line-primary);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      outline: none;
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--space-md);
+    }
+    .admin-btn {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: var(--space-sm) var(--space-lg);
+      border: 1px solid var(--line-primary);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .admin-btn:hover {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+    .admin-btn--save {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+    .admin-btn--save:hover {
+      background: var(--accent-red);
+      color: #fff;
+    }
+    .status-msg {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: none;
+    }
+    .status-msg--error { color: var(--accent-red); }
+    .status-msg--success { color: #2a8a2a; }
+    @media (max-width: 768px) {
+      .field-row, .color-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="editor-header">
+      <div>
+        <div class="section-header__label">Admin Settings</div>
+        <h1>Site Configuration</h1>
+      </div>
+      <div style="display: flex; gap: var(--space-sm); align-items: center;">
+        <span class="status-msg" id="status"></span>
+        <button class="admin-btn" onclick="toggleTheme()" title="Toggle dark mode">◐</button>
+        <button class="admin-btn admin-btn--save" onclick="saveConfig()">Save Config</button>
+        <a href="/admin/index.html" class="admin-btn">Back</a>
+      </div>
+    </div>
+
+    <form class="editor-form" id="config-form" onsubmit="event.preventDefault(); saveConfig();">
+      <!-- Site Info -->
+      <div class="section-group">
+        <div class="section-group__title">Site Information</div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="siteName">Site Name</label>
+            <input type="text" class="field__input" id="siteName" placeholder="Placeholder: Site domain name">
+          </div>
+          <div class="field">
+            <label class="field__label" for="siteTitle">Site Title</label>
+            <input type="text" class="field__input" id="siteTitle" placeholder="Placeholder: Site title">
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="siteDescription">Description</label>
+          <input type="text" class="field__input" id="siteDescription" placeholder="Placeholder: Site description">
+        </div>
+        <div class="field">
+          <label class="field__label" for="baseUrl">Base URL</label>
+          <input type="url" class="field__input" id="baseUrl" placeholder="Placeholder: Site base URL (https://...)">
+        </div>
+      </div>
+
+      <!-- Author Info -->
+      <div class="section-group">
+        <div class="section-group__title">Author Information</div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="authorName">Name</label>
+            <input type="text" class="field__input" id="authorName" placeholder="Placeholder: Author name">
+          </div>
+          <div class="field">
+            <label class="field__label" for="authorEmail">Email</label>
+            <input type="email" class="field__input" id="authorEmail" placeholder="Placeholder: Author email">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="githubUsername">GitHub Username</label>
+            <input type="text" class="field__input" id="githubUsername" placeholder="Placeholder: GitHub username">
+          </div>
+          <div class="field">
+            <label class="field__label" for="githubProfileUrl">GitHub Profile URL</label>
+            <input type="url" class="field__input" id="githubProfileUrl" placeholder="Placeholder: GitHub profile URL (https://...)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Homepage Hero -->
+      <div class="section-group">
+        <div class="section-group__title">Homepage Hero Section</div>
+        <div class="field">
+          <label class="field__label" for="heroLabel">Hero Label</label>
+          <input type="text" class="field__input" id="heroLabel" placeholder="Placeholder: Hero label">
+        </div>
+        <div class="field">
+          <label class="field__label" for="heroTitle">Hero Title</label>
+          <input type="text" class="field__input" id="heroTitle" placeholder="Placeholder: Hero title">
+        </div>
+        <div class="field">
+          <label class="field__label" for="heroSubtitle">Hero Subtitle</label>
+          <input type="text" class="field__input" id="heroSubtitle" placeholder="Placeholder: Hero tagline or bio">
+        </div>
+      </div>
+
+      <!-- Favicons -->
+      <div class="section-group">
+        <div class="section-group__title">Favicons (SVG)</div>
+        <div class="field">
+          <label class="field__label">Light Mode Favicon</label>
+          <div style="display: flex; align-items: center; gap: var(--space-sm);">
+            <input type="file" id="favicon-light-upload" accept=".svg" style="display: none;">
+            <button type="button" class="admin-btn" onclick="document.getElementById('favicon-light-upload').click()">Upload Light Favicon</button>
+            <span class="field__label" id="favicon-light-status">Checking...</span>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label">Dark Mode Favicon</label>
+          <div style="display: flex; align-items: center; gap: var(--space-sm);">
+            <input type="file" id="favicon-dark-upload" accept=".svg" style="display: none;">
+            <button type="button" class="admin-btn" onclick="document.getElementById('favicon-dark-upload').click()">Upload Dark Favicon</button>
+            <span class="field__label" id="favicon-dark-status">Checking...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Light Theme Colors -->
+      <div class="section-group">
+        <div class="section-group__title">Light Theme Colors</div>
+        <div class="color-grid" id="light-colors"></div>
+      </div>
+
+      <!-- Dark Theme Colors -->
+      <div class="section-group">
+        <div class="section-group__title">Dark Theme Colors</div>
+        <div class="color-grid" id="dark-colors"></div>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const colorFields = {
+      bgPrimary: 'Primary Background',
+      bgSecondary: 'Secondary Background',
+      bgTertiary: 'Tertiary Background',
+      linePrimary: 'Primary Lines',
+      lineAccent: 'Accent Lines',
+      accentRed: 'Red Accent',
+      accentRedHover: 'Red Accent (Hover)',
+      accentBlue: 'Blue Accent',
+      textPrimary: 'Primary Text',
+      textSecondary: 'Secondary Text',
+      textMuted: 'Muted Text',
+      bgCode: 'Code Background'
+    };
+
+    // Load favicon status
+    async function loadFaviconsStatus() {
+      try {
+        const res = await fetch('/admin/api/favicons-status');
+        const data = await res.json();
+        const lightEl = document.getElementById('favicon-light-status');
+        const darkEl = document.getElementById('favicon-dark-status');
+
+        if (data.light.exists) {
+          lightEl.innerHTML = 'Uploaded — <a href="' + data.light.url + '" target="_blank" style="color: var(--accent-red);">View</a>';
+        } else {
+          lightEl.textContent = 'No favicon uploaded';
+        }
+
+        if (data.dark.exists) {
+          darkEl.innerHTML = 'Uploaded — <a href="' + data.dark.url + '" target="_blank" style="color: var(--accent-red);">View</a>';
+        } else {
+          darkEl.textContent = 'No favicon uploaded';
+        }
+      } catch (err) {
+        document.getElementById('favicon-light-status').textContent = 'Error checking status';
+        document.getElementById('favicon-dark-status').textContent = 'Error checking status';
+      }
+    }
+
+    // Upload favicon handler
+    document.getElementById('favicon-light-upload').addEventListener('change', uploadFavicon.bind(null, 'light'));
+    document.getElementById('favicon-dark-upload').addEventListener('change', uploadFavicon.bind(null, 'dark'));
+
+    async function uploadFavicon(type, e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('favicon', file);
+      formData.append('type', type);
+
+      const statusEl = document.getElementById('favicon-' + type + '-status');
+      statusEl.textContent = 'Uploading...';
+
+      try {
+        const res = await fetch('/admin/api/upload-favicon', { method: 'POST', body: formData });
+        const data = await res.json();
+        if (data.ok) {
+          statusEl.innerHTML = 'Uploaded — <a href="' + data.url + '" target="_blank" style="color: var(--accent-red);">View</a>';
+        } else {
+          statusEl.textContent = data.error || 'Upload failed';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Upload error';
+      }
+      e.target.value = '';
+    }
+
+    // Load config
+    async function loadConfig() {
+      try {
+        const res = await fetch('/admin/api/config');
+        if (res.status === 401) {
+          window.location.href = '/admin/login.html';
+          return;
+        }
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const config = await res.json();
+        console.log('Config loaded:', config);
+
+        // Populate site info
+        document.getElementById('siteName').value = config.site?.name || '';
+        document.getElementById('siteTitle').value = config.site?.title || '';
+        document.getElementById('siteDescription').value = config.site?.description || '';
+        document.getElementById('baseUrl').value = config.site?.baseUrl || '';
+
+        // Populate author info
+        document.getElementById('authorName').value = config.author?.name || '';
+        document.getElementById('authorEmail').value = config.author?.email || '';
+        document.getElementById('githubUsername').value = config.author?.githubUsername || '';
+        document.getElementById('githubProfileUrl').value = config.author?.githubProfileUrl || '';
+
+        // Populate homepage
+        document.getElementById('heroLabel').value = config.homepage?.heroLabel || '';
+        document.getElementById('heroTitle').value = config.homepage?.heroTitle || '';
+        document.getElementById('heroSubtitle').value = config.homepage?.heroSubtitle || '';
+
+        // Populate color inputs
+        if (config.theme) {
+          console.log('Populating colors - Light theme colors:', config.theme.light);
+          console.log('Populating colors - Dark theme colors:', config.theme.dark);
+          populateColorInputs('light', config.theme.light || {});
+          populateColorInputs('dark', config.theme.dark || {});
+        } else {
+          console.warn('No theme data in config');
+        }
+
+        // Load favicon status
+        loadFaviconsStatus();
+      } catch (err) {
+        console.error('Failed to load config:', err);
+        document.getElementById('status').textContent = 'Error loading config: ' + err.message;
+        document.getElementById('status').className = 'status-msg status-msg--error';
+        document.getElementById('status').style.display = 'inline';
+      }
+    }
+
+    function populateColorInputs(theme, colors) {
+      const container = document.getElementById(theme + '-colors');
+      console.log(`Populating ${theme} colors, container:`, container);
+      const html = Object.entries(colorFields).map(([key, label]) => {
+        const value = colors[key] || '';
+        console.log(`  ${key}: ${value}`);
+        return `
+          <div class="field">
+            <label class="field__label">${label}</label>
+            <div class="field__color">
+              <input type="color" class="color-input" id="${theme}-${key}" value="${hexToColor(value) || '#000000'}" onchange="updateColorValue('${theme}', '${key}')">
+              <input type="text" class="color-value" id="${theme}-${key}-value" value="${value}" onchange="updateColorInput('${theme}', '${key}')">
+            </div>
+          </div>
+        `;
+      }).join('');
+      console.log(`Generated HTML length for ${theme}:`, html.length);
+      container.innerHTML = html;
+      console.log(`${theme} colors populated`);
+    }
+
+    function hexToColor(value) {
+      if (!value) return '#000000';
+      // Handle both hex and rgba formats
+      if (value.startsWith('#')) return value;
+      return '#000000';
+    }
+
+    function updateColorValue(theme, key) {
+      const input = document.getElementById(theme + '-' + key);
+      const valueInput = document.getElementById(theme + '-' + key + '-value');
+      valueInput.value = input.value;
+    }
+
+    function updateColorInput(theme, key) {
+      const valueInput = document.getElementById(theme + '-' + key + '-value');
+      const input = document.getElementById(theme + '-' + key);
+      if (valueInput.value.startsWith('#')) {
+        input.value = valueInput.value;
+      }
+    }
+
+    async function saveConfig() {
+      const statusEl = document.getElementById('status');
+
+      try {
+        const lightColors = {};
+        const darkColors = {};
+
+        Object.keys(colorFields).forEach(key => {
+          lightColors[key] = document.getElementById('light-' + key + '-value').value;
+          darkColors[key] = document.getElementById('dark-' + key + '-value').value;
+        });
+
+        const config = {
+          site: {
+            name: document.getElementById('siteName').value,
+            title: document.getElementById('siteTitle').value,
+            description: document.getElementById('siteDescription').value,
+            baseUrl: document.getElementById('baseUrl').value
+          },
+          author: {
+            name: document.getElementById('authorName').value,
+            email: document.getElementById('authorEmail').value,
+            githubUsername: document.getElementById('githubUsername').value,
+            githubProfileUrl: document.getElementById('githubProfileUrl').value
+          },
+          homepage: {
+            heroLabel: document.getElementById('heroLabel').value,
+            heroTitle: document.getElementById('heroTitle').value,
+            heroSubtitle: document.getElementById('heroSubtitle').value
+          },
+          sections: {
+            blog: { title: 'Blog', description: 'Articles and thoughts', sectorLabel: 'Sector: Recent Articles' },
+            projects: { title: 'Projects', description: 'Things I\'ve built', sectorLabel: 'Sector: Projects' },
+            about: { title: 'About', description: '' }
+          },
+          rss: {
+            title: document.getElementById('siteName').value,
+            description: document.getElementById('siteDescription').value
+          },
+          theme: {
+            light: lightColors,
+            dark: darkColors
+          }
+        };
+
+        statusEl.textContent = 'Saving...';
+        statusEl.className = 'status-msg';
+        statusEl.style.display = 'inline';
+
+        const res = await fetch('/admin/api/config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(config)
+        });
+
+        const data = await res.json();
+        if (data.ok) {
+          statusEl.textContent = 'Saved!';
+          statusEl.className = 'status-msg status-msg--success';
+        } else {
+          statusEl.textContent = data.error || 'Save failed';
+          statusEl.className = 'status-msg status-msg--error';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Connection error';
+        statusEl.className = 'status-msg status-msg--error';
+      }
+
+      setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
+    }
+
+    function toggleTheme() {
+      var html = document.documentElement;
+      var isDark = html.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        html.removeAttribute('data-theme');
+        localStorage.setItem('admin-theme', 'light');
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        localStorage.setItem('admin-theme', 'dark');
+      }
+    }
+
+    loadConfig();
+  </script>
+</body>
+</html>

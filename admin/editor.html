@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Editor</title>
+  <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/panel-lines.css">
+  <link rel="stylesheet" href="/css/glitch.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.css">
+  <script>
+    // Apply theme before render to prevent flash
+    (function() {
+      var theme = localStorage.getItem('admin-theme');
+      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <style>
+    .editor-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-lg) 0;
+      border-bottom: 1px solid var(--line-primary);
+      margin-bottom: var(--space-xl);
+    }
+    .editor-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+    }
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xs);
+    }
+    .field__label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .field__input {
+      font-family: var(--font-body);
+      font-size: 0.9rem;
+      padding: var(--space-sm) var(--space-md);
+      border: 1px solid var(--line-primary);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      outline: none;
+    }
+    .field__input:focus {
+      border-color: var(--accent-red);
+    }
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+    .field__checkbox {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      flex-direction: row;
+    }
+    .admin-btn {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: var(--space-sm) var(--space-lg);
+      border: 1px solid var(--line-primary);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s;
+    }
+    .admin-btn:hover {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+    .admin-btn--save {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+    .admin-btn--save:hover {
+      background: var(--accent-red);
+      color: #fff;
+    }
+    .status-msg {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: none;
+    }
+    .status-msg--error { color: var(--accent-red); }
+    .status-msg--success { color: #2a8a2a; }
+    .EasyMDEContainer .CodeMirror {
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+      border-color: var(--line-primary);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    .EasyMDEContainer .CodeMirror-cursor {
+      border-left-color: var(--text-primary);
+    }
+    .EasyMDEContainer .editor-toolbar {
+      border-color: var(--line-primary);
+      background: var(--bg-secondary);
+    }
+    .EasyMDEContainer .editor-toolbar button {
+      color: var(--text-secondary) !important;
+    }
+    .EasyMDEContainer .editor-toolbar button:hover,
+    .EasyMDEContainer .editor-toolbar button.active {
+      background: var(--bg-tertiary);
+      color: var(--text-primary) !important;
+    }
+    .EasyMDEContainer .editor-preview {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+    }
+    .EasyMDEContainer .editor-statusbar {
+      color: var(--text-muted);
+    }
+    @media (max-width: 768px) {
+      .field-row { grid-template-columns: 1fr; }
+    }
+    /* Media browser */
+    .media-browser {
+      display: none;
+      margin-bottom: var(--space-lg);
+      padding: var(--space-md);
+      border: 1px solid var(--line-primary);
+      background: var(--bg-secondary);
+    }
+    .media-browser--open { display: block; }
+    .media-browser__header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-md);
+    }
+    .media-browser__title {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+    }
+    .media-browser__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: var(--space-sm);
+    }
+    .media-browser__item {
+      cursor: pointer;
+      border: 1px solid var(--line-primary);
+      transition: border-color 0.15s;
+      aspect-ratio: 1;
+      overflow: hidden;
+    }
+    .media-browser__item:hover {
+      border-color: var(--accent-red);
+    }
+    .media-browser__item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .media-browser__empty {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    .upload-status {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-left: var(--space-sm);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="editor-header">
+      <div>
+        <div class="section-header__label" id="editor-label">New Post</div>
+        <h1 id="editor-title">Editor</h1>
+      </div>
+      <div style="display: flex; gap: var(--space-sm); align-items: center;">
+        <span class="status-msg" id="status"></span>
+        <button class="admin-btn" onclick="toggleTheme()" title="Toggle dark mode">◐</button>
+        <button class="admin-btn admin-btn--save" onclick="save()">Save & Build</button>
+        <a href="/admin/index.html" class="admin-btn">Back</a>
+      </div>
+    </div>
+
+    <form class="editor-form" id="editor-form" onsubmit="event.preventDefault(); save();">
+      <!-- Common fields -->
+      <div class="field">
+        <label class="field__label" for="slug">Slug</label>
+        <input type="text" class="field__input" id="slug" placeholder="Placeholder: Post slug (lowercase, numbers, hyphens)" pattern="[a-z0-9][a-z0-9-]*" required>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="title">Title</label>
+        <input type="text" class="field__input" id="title" placeholder="Placeholder: Post title" required>
+      </div>
+
+      <div class="field">
+        <label class="field__label" for="description">Description</label>
+        <input type="text" class="field__input" id="description" placeholder="Placeholder: Brief description">
+      </div>
+
+      <!-- Blog-specific fields -->
+      <div id="blog-fields">
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="date">Date</label>
+            <input type="date" class="field__input" id="date">
+          </div>
+          <div class="field">
+            <label class="field__label" for="tags">Tags (comma-separated)</label>
+            <input type="text" class="field__input" id="tags" placeholder="Placeholder: Tags (comma-separated)">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="relatedPosts">Related Posts (comma-separated slugs)</label>
+            <input type="text" class="field__input" id="relatedPosts" placeholder="Placeholder: Related posts (comma-separated slugs)">
+          </div>
+          <div class="field field__checkbox">
+            <input type="checkbox" id="draft">
+            <label class="field__label" for="draft">Draft</label>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field__label" for="project">Project</label>
+          <select class="field__input" id="project">
+            <option value="">None</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Project-specific fields -->
+      <div id="project-fields" style="display: none;">
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="url">Live URL</label>
+            <input type="url" class="field__input" id="url" placeholder="Placeholder: Live URL (https://...)">
+          </div>
+          <div class="field">
+            <label class="field__label" for="repo">Repository URL</label>
+            <input type="url" class="field__input" id="repo" placeholder="Placeholder: Repository URL (https://github.com/...)">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="tech">Tech (comma-separated)</label>
+            <input type="text" class="field__input" id="tech" placeholder="Placeholder: Tech (comma-separated)">
+          </div>
+          <div class="field">
+            <label class="field__label" for="status">Status</label>
+            <select class="field__input" id="projectStatus">
+              <option value="active">Active</option>
+              <option value="completed" selected>Completed</option>
+              <option value="archived">Archived</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="order">Sort Order</label>
+            <input type="number" class="field__input" id="order" value="0">
+          </div>
+          <div class="field">
+            <label class="field__label" for="hero">Hero Image URL</label>
+            <input type="text" class="field__input" id="hero" placeholder="Placeholder: Hero image URL (/images/...)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Home-specific fields -->
+      <div id="home-fields" style="display: none;">
+        <div class="field">
+          <label class="field__label" for="hero-label">Hero Label</label>
+          <input type="text" class="field__input" id="hero-label" placeholder="Placeholder: Hero label">
+        </div>
+        <div class="field">
+          <label class="field__label" for="hero-subtitle">Subtitle</label>
+          <input type="text" class="field__input" id="hero-subtitle" placeholder="Placeholder: Subtitle">
+        </div>
+      </div>
+
+      <!-- About Page Fields (about mode only) -->
+      <div id="resume-upload-section" style="display: none;">
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="email">Email</label>
+            <input type="email" class="field__input" id="email" placeholder="Placeholder: Email address">
+          </div>
+          <div class="field">
+            <label class="field__label" for="linkedin">LinkedIn</label>
+            <input type="url" class="field__input" id="linkedin" placeholder="Placeholder: LinkedIn URL (https://linkedin.com/...)">
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label class="field__label" for="github">GitHub</label>
+            <input type="url" class="field__input" id="github" placeholder="Placeholder: GitHub URL (https://github.com/...)">
+          </div>
+          <div class="field">
+            <label class="field__label" for="twitter">Twitter/X</label>
+            <input type="url" class="field__input" id="twitter" placeholder="Placeholder: Twitter/X URL (https://twitter.com/...)">
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Profile Photo</label>
+          <div style="display: flex; align-items: center; gap: var(--space-sm);">
+            <input type="file" id="photo-upload" accept="image/*" style="display: none;">
+            <button type="button" class="admin-btn" onclick="document.getElementById('photo-upload').click()">Upload Photo</button>
+            <span class="field__label" id="photo-status">Ready to upload</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Resume PDF</label>
+          <div style="display: flex; align-items: center; gap: var(--space-sm);">
+            <input type="file" id="resume-upload" accept=".pdf" style="display: none;">
+            <button type="button" class="admin-btn" onclick="document.getElementById('resume-upload').click()">Upload PDF</button>
+            <span class="field__label" id="resume-status">Checking...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Media Browser -->
+      <div class="media-browser" id="media-browser">
+        <div class="media-browser__header">
+          <span class="media-browser__title">Uploaded Images</span>
+          <button type="button" class="admin-btn" onclick="toggleMediaBrowser()">Close</button>
+        </div>
+        <div class="media-browser__grid" id="media-grid">
+          <span class="media-browser__empty">No images uploaded yet</span>
+        </div>
+      </div>
+
+      <!-- Markdown Editor -->
+      <div class="field">
+        <label class="field__label">Content (Markdown)</label>
+        <input type="file" id="image-upload" accept="image/*" style="display: none;">
+        <textarea id="content"></textarea>
+      </div>
+    </form>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/easymde/dist/easymde.min.js"></script>
+  <script>
+    var params = new URLSearchParams(window.location.search);
+    var contentType = params.get('type') || 'blog';
+    var slug = params.get('slug');
+    var isNew = params.get('new') === '1';
+
+    // Show/hide type-specific fields
+    if (contentType === 'projects') {
+      document.getElementById('blog-fields').style.display = 'none';
+      document.getElementById('project-fields').style.display = 'block';
+    } else if (contentType === 'about') {
+      document.getElementById('blog-fields').style.display = 'none';
+      document.getElementById('project-fields').style.display = 'none';
+      document.getElementById('slug').closest('.field').style.display = 'none';
+      document.getElementById('resume-upload-section').style.display = 'block';
+      loadResumeStatus();
+    } else if (contentType === 'home') {
+      document.getElementById('blog-fields').style.display = 'none';
+      document.getElementById('project-fields').style.display = 'none';
+      document.getElementById('slug').closest('.field').style.display = 'none';
+      document.getElementById('description').closest('.field').style.display = 'none';
+      document.getElementById('home-fields').style.display = 'block';
+    }
+
+    // Update labels
+    var typeLabel = contentType === 'blog' ? 'Post' : contentType === 'about' ? 'About Page' : contentType === 'home' ? 'Homepage' : 'Project';
+    document.getElementById('editor-label').textContent = (contentType === 'about' || contentType === 'home') ? 'Edit' : (isNew ? 'New ' : 'Edit ') + typeLabel;
+
+    // Initialize EasyMDE
+    var editor = new EasyMDE({
+      element: document.getElementById('content'),
+      spellChecker: false,
+      autosave: { enabled: true, uniqueId: 'editor-' + (slug || 'new'), delay: 5000 },
+      minHeight: '400px',
+      toolbar: [
+        'bold', 'italic', 'heading', '|',
+        'code', 'quote', 'unordered-list', 'ordered-list', '|',
+        'link', 'image', '|',
+        {
+          name: 'upload-image',
+          action: function() { document.getElementById('image-upload').click(); },
+          className: 'fa fa-upload',
+          title: 'Upload Image'
+        },
+        {
+          name: 'media-browser',
+          action: function() { toggleMediaBrowser(); },
+          className: 'fa fa-folder-open',
+          title: 'Media Browser'
+        },
+        '|',
+        'preview', 'side-by-side', 'fullscreen', '|',
+        'guide',
+      ],
+    });
+
+    // Populate project dropdown for blog posts
+    if (contentType === 'blog') {
+      fetch('/admin/api/projects')
+        .then(function(r) { return r.json(); })
+        .then(function(projects) {
+          var select = document.getElementById('project');
+          projects.forEach(function(p) {
+            var opt = document.createElement('option');
+            opt.value = p.slug;
+            opt.textContent = p.title;
+            select.appendChild(opt);
+          });
+        });
+    }
+
+    // Load existing content
+    if (contentType === 'home') {
+      fetch('/admin/api/content/home')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          document.getElementById('title').value = data.title || '';
+          document.getElementById('hero-label').value = data.label || 'System Online';
+          document.getElementById('hero-subtitle').value = data.subtitle || '';
+          editor.value(data.content || '');
+          document.getElementById('editor-title').textContent = 'Homepage';
+        });
+    } else if (contentType === 'about') {
+      fetch('/admin/api/content/about')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          document.getElementById('title').value = data.title || 'About';
+          document.getElementById('description').value = data.description || '';
+          document.getElementById('email').value = data.email || '';
+          document.getElementById('linkedin').value = data.linkedin || '';
+          document.getElementById('github').value = data.github || '';
+          document.getElementById('twitter').value = data.twitter || '';
+          editor.value(data.content || '');
+          document.getElementById('editor-title').textContent = 'About Page';
+        });
+    } else if (slug && !isNew) {
+      fetch('/admin/api/content/' + contentType + '/' + slug)
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          document.getElementById('slug').value = data.slug;
+          document.getElementById('slug').readOnly = true;
+          document.getElementById('title').value = data.title || '';
+          document.getElementById('description').value = data.description || '';
+          editor.value(data.content || '');
+
+          if (contentType === 'blog') {
+            document.getElementById('date').value = data.date ? new Date(data.date).toISOString().split('T')[0] : '';
+            document.getElementById('tags').value = (data.tags || []).join(', ');
+            document.getElementById('relatedPosts').value = (data.relatedPosts || []).join(', ');
+            document.getElementById('draft').checked = !!data.draft;
+            if (data.project) {
+              // Set after dropdown is populated
+              setTimeout(function() { document.getElementById('project').value = data.project; }, 500);
+            }
+          } else {
+            document.getElementById('url').value = data.url || '';
+            document.getElementById('repo').value = data.repo || '';
+            document.getElementById('tech').value = (data.tech || []).join(', ');
+            document.getElementById('projectStatus').value = data.status || 'completed';
+            document.getElementById('order').value = data.order || 0;
+            document.getElementById('hero').value = data.hero || '';
+          }
+
+          document.getElementById('editor-title').textContent = data.title || 'Editor';
+        });
+    } else {
+      // Set defaults for new entries
+      document.getElementById('date').value = new Date().toISOString().split('T')[0];
+    }
+
+    function parseList(str) {
+      return str ? str.split(',').map(function(s) { return s.trim(); }).filter(Boolean) : [];
+    }
+
+    async function save() {
+      var statusEl = document.getElementById('status');
+      var slugVal = (contentType === 'about' || contentType === 'home') ? contentType : document.getElementById('slug').value.trim();
+      if (!slugVal) { alert('Slug is required'); return; }
+
+      var frontmatter = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+      };
+
+      if (contentType === 'home') {
+        frontmatter.label = document.getElementById('hero-label').value;
+        frontmatter.subtitle = document.getElementById('hero-subtitle').value;
+      } else if (contentType === 'about') {
+        frontmatter.email = document.getElementById('email').value || undefined;
+        frontmatter.linkedin = document.getElementById('linkedin').value || undefined;
+        frontmatter.github = document.getElementById('github').value || undefined;
+        frontmatter.twitter = document.getElementById('twitter').value || undefined;
+      } else if (contentType === 'blog') {
+        frontmatter.date = document.getElementById('date').value;
+        frontmatter.tags = parseList(document.getElementById('tags').value);
+        frontmatter.relatedPosts = parseList(document.getElementById('relatedPosts').value);
+        frontmatter.draft = document.getElementById('draft').checked;
+        var projectVal = document.getElementById('project').value;
+        if (projectVal) frontmatter.project = projectVal;
+      } else if (contentType === 'projects') {
+        frontmatter.url = document.getElementById('url').value || undefined;
+        frontmatter.repo = document.getElementById('repo').value || undefined;
+        frontmatter.tech = parseList(document.getElementById('tech').value);
+        frontmatter.status = document.getElementById('projectStatus').value;
+        frontmatter.order = parseInt(document.getElementById('order').value) || 0;
+        frontmatter.hero = document.getElementById('hero').value || undefined;
+      }
+
+      var body = {
+        frontmatter: frontmatter,
+        content: editor.value(),
+      };
+
+      statusEl.textContent = 'Saving...';
+      statusEl.className = 'status-msg';
+      statusEl.style.display = 'inline';
+
+      var saveUrl = (contentType === 'about' || contentType === 'home')
+        ? '/admin/api/content/' + contentType
+        : '/admin/api/content/' + contentType + '/' + slugVal;
+
+      try {
+        var res = await fetch(saveUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        var data = await res.json();
+        if (data.ok) {
+          statusEl.textContent = 'Saved!';
+          statusEl.className = 'status-msg status-msg--success';
+          // Update URL if this was a new entry
+          if (isNew && contentType !== 'about' && contentType !== 'home') {
+            window.history.replaceState({}, '', '/admin/editor.html?type=' + contentType + '&slug=' + slugVal);
+            isNew = false;
+            document.getElementById('slug').readOnly = true;
+          }
+        } else {
+          statusEl.textContent = data.error || 'Save failed';
+          statusEl.className = 'status-msg status-msg--error';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Connection error';
+        statusEl.className = 'status-msg status-msg--error';
+      }
+
+      setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
+    }
+
+    // Ctrl+S / Cmd+S to save
+    document.addEventListener('keydown', function(e) {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        save();
+      }
+    });
+
+    // Image upload handling
+    function getUploadSlug() {
+      if (contentType === 'about' || contentType === 'home') return contentType;
+      return document.getElementById('slug').value.trim() || 'uploads';
+    }
+
+    document.getElementById('image-upload').addEventListener('change', async function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+
+      var uploadSlug = getUploadSlug();
+      var formData = new FormData();
+      formData.append('image', file);
+
+      var statusEl = document.getElementById('status');
+      statusEl.textContent = 'Uploading...';
+      statusEl.className = 'status-msg';
+      statusEl.style.display = 'inline';
+
+      try {
+        var res = await fetch('/admin/api/upload/' + uploadSlug, {
+          method: 'POST',
+          body: formData,
+        });
+        var data = await res.json();
+        if (data.ok) {
+          // Insert markdown image at cursor
+          var markdown = '![' + file.name + '](' + data.url + ')';
+          editor.codemirror.replaceSelection(markdown);
+          statusEl.textContent = 'Uploaded!';
+          statusEl.className = 'status-msg status-msg--success';
+          // Refresh media browser if open
+          if (document.getElementById('media-browser').classList.contains('media-browser--open')) {
+            loadMediaBrowser();
+          }
+        } else {
+          statusEl.textContent = data.error || 'Upload failed';
+          statusEl.className = 'status-msg status-msg--error';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Upload error';
+        statusEl.className = 'status-msg status-msg--error';
+      }
+
+      setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
+      e.target.value = ''; // Reset file input
+    });
+
+    // Media browser
+    function toggleMediaBrowser() {
+      var browser = document.getElementById('media-browser');
+      browser.classList.toggle('media-browser--open');
+      if (browser.classList.contains('media-browser--open')) {
+        loadMediaBrowser();
+      }
+    }
+
+    async function loadMediaBrowser() {
+      var uploadSlug = getUploadSlug();
+      var grid = document.getElementById('media-grid');
+
+      try {
+        var res = await fetch('/admin/api/images/' + uploadSlug);
+        var images = await res.json();
+
+        if (images.length === 0) {
+          grid.innerHTML = '<span class="media-browser__empty">No images uploaded yet</span>';
+          return;
+        }
+
+        grid.innerHTML = images.map(function(img) {
+          return '<div class="media-browser__item" onclick="insertImage(\'' + img.url + '\', \'' + img.name + '\')">' +
+            '<img src="' + img.url + '" alt="' + img.name + '">' +
+            '</div>';
+        }).join('');
+      } catch (err) {
+        grid.innerHTML = '<span class="media-browser__empty">Error loading images</span>';
+      }
+    }
+
+    function insertImage(url, name) {
+      var markdown = '![' + name + '](' + url + ')';
+      editor.codemirror.replaceSelection(markdown);
+    }
+
+    // Resume upload
+    async function loadResumeStatus() {
+      try {
+        var res = await fetch('/admin/api/resume-status');
+        var data = await res.json();
+        var el = document.getElementById('resume-status');
+        if (data.exists) {
+          el.innerHTML = 'Uploaded — <a href="' + data.url + '" target="_blank" style="color: var(--accent-red);">View PDF</a>';
+        } else {
+          el.textContent = 'No resume uploaded';
+        }
+      } catch (err) {
+        document.getElementById('resume-status').textContent = 'Error checking status';
+      }
+    }
+
+    document.getElementById('resume-upload').addEventListener('change', async function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+
+      var formData = new FormData();
+      formData.append('resume', file);
+
+      var statusEl = document.getElementById('resume-status');
+      statusEl.textContent = 'Uploading...';
+
+      try {
+        var res = await fetch('/admin/api/upload-resume', { method: 'POST', body: formData });
+        var data = await res.json();
+        if (data.ok) {
+          statusEl.innerHTML = 'Uploaded — <a href="' + data.url + '" target="_blank" style="color: var(--accent-red);">View PDF</a>';
+        } else {
+          statusEl.textContent = data.error || 'Upload failed';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Upload error';
+      }
+      e.target.value = '';
+    });
+
+    // Photo upload
+    document.getElementById('photo-upload').addEventListener('change', async function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+
+      var formData = new FormData();
+      formData.append('photo', file);
+
+      var statusEl = document.getElementById('photo-status');
+      statusEl.textContent = 'Uploading...';
+
+      try {
+        var res = await fetch('/admin/api/upload-photo', { method: 'POST', body: formData });
+        var data = await res.json();
+        if (data.ok) {
+          statusEl.innerHTML = 'Uploaded — <a href="' + data.url + '" target="_blank" style="color: var(--accent-red);">View</a>';
+        } else {
+          statusEl.textContent = data.error || 'Upload failed';
+        }
+      } catch (err) {
+        statusEl.textContent = 'Upload error';
+      }
+      e.target.value = '';
+    });
+
+    function toggleTheme() {
+      var html = document.documentElement;
+      var isDark = html.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        html.removeAttribute('data-theme');
+        localStorage.setItem('admin-theme', 'light');
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        localStorage.setItem('admin-theme', 'dark');
+      }
+    }
+  </script>
+</body>
+</html>

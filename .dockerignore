@@ -1,0 +1,3 @@
+# Everything except docker-entrypoint.sh
+*
+!docker-entrypoint.sh

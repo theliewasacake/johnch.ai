@@ -1,0 +1,25 @@
+{
+  "name": "johnch-ai",
+  "version": "1.0.0",
+  "description": "Personal website - blog, projects, about",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "node server/index.js",
+    "build": "node server/build.js",
+    "start": "NODE_ENV=production node server/index.js",
+    "hash-password": "node -e \"const bcrypt=require('bcrypt');const p=process.argv[1];bcrypt.hash(p,12).then(h=>console.log(h));\""
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "d3": "^7.9.0",
+    "dotenv": "^16.4.7",
+    "easymde": "^2.18.0",
+    "express": "^4.21.1",
+    "express-session": "^1.18.1",
+    "gray-matter": "^4.0.3",
+    "highlight.js": "^11.11.1",
+    "marked": "^15.0.4",
+    "marked-highlight": "^2.2.1",
+    "multer": "^2.0.2"
+  }
+}

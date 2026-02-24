@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+{{head}}
+</head>
+<body>
+{{nav}}
+<main>
+  <div class="container">
+    <header class="page-header page-header--full-width">
+      <div class="section-header__label">Sector: Blog</div>
+      <h1>Articles</h1>
+      <div class="section-header__line"></div>
+    </header>
+
+    <!-- Article Graph -->
+    <div class="graph-container" id="article-graph">
+      <span class="graph-container__label">Article Network</span>
+    </div>
+
+    <hr class="divider">
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <input type="text" class="filter-bar__input" placeholder="Search articles..." id="search-input">
+      <div class="filter-bar__tags" id="tag-filters">
+        {{tagList}}
+      </div>
+    </div>
+
+    <!-- Post Listing -->
+    <div class="grid grid--2col" id="card-grid">
+      {{posts}}
+    </div>
+    <div class="filter-bar__empty" id="filter-empty">No matching articles found</div>
+  </div>
+</main>
+{{footer}}
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script src="/js/graph.js"></script>
+<script src="/js/filter.js"></script>
+</body>
+</html>

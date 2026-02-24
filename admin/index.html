@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/panel-lines.css">
+  <link rel="stylesheet" href="/css/glitch.css">
+  <script>
+    // Apply theme before render to prevent flash
+    (function() {
+      var theme = localStorage.getItem('admin-theme');
+      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    })();
+  </script>
+  <style>
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-lg) 0;
+      border-bottom: 1px solid var(--line-primary);
+      margin-bottom: var(--space-2xl);
+    }
+    .admin-btn {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: var(--space-xs) var(--space-md);
+      border: 1px solid var(--line-primary);
+      background: transparent;
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-decoration: none;
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .admin-btn:hover {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+    .admin-btn--primary {
+      border-color: var(--accent-red);
+      color: var(--accent-red);
+    }
+    .content-list {
+      list-style: none;
+    }
+    .content-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) 0;
+      border-bottom: 1px solid var(--line-primary);
+    }
+    .content-item__info {
+      flex: 1;
+    }
+    .content-item__title {
+      font-family: var(--font-heading);
+      text-transform: uppercase;
+      margin-bottom: var(--space-xs);
+    }
+    .content-item__meta {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    .content-item__actions {
+      display: flex;
+      gap: var(--space-sm);
+    }
+    .admin-btn--danger {
+      border-color: transparent;
+      color: var(--text-muted);
+    }
+    .admin-btn--danger:hover {
+      color: var(--accent-red);
+      border-color: var(--accent-red);
+    }
+    .tab-bar {
+      display: flex;
+      gap: var(--space-lg);
+      margin-bottom: var(--space-xl);
+    }
+    .tab {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding-bottom: var(--space-xs);
+      border: none;
+      background: none;
+      position: relative;
+    }
+    .tab--active {
+      color: var(--accent-red);
+    }
+    .tab--active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: var(--accent-red);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="admin-header">
+      <div>
+        <div class="section-header__label">Admin Panel</div>
+        <h1>Dashboard</h1>
+      </div>
+      <div style="display: flex; gap: var(--space-sm);">
+        <button class="admin-btn" onclick="toggleTheme()" title="Toggle dark mode">◐</button>
+        <a href="/admin/config.html" class="admin-btn">Settings</a>
+        <a href="/admin/editor.html?type=home" class="admin-btn">Edit Home</a>
+        <a href="/admin/editor.html?type=about" class="admin-btn">Edit About</a>
+        <a href="/" class="admin-btn">View Site</a>
+        <button class="admin-btn" onclick="logout()">Logout</button>
+      </div>
+    </div>
+
+    <div class="tab-bar">
+      <button class="tab tab--active" onclick="switchTab('blog', this)">Blog Posts</button>
+      <button class="tab" onclick="switchTab('projects', this)">Projects</button>
+    </div>
+
+    <div style="margin-bottom: var(--space-lg);">
+      <a href="/admin/editor.html?type=blog&new=1" class="admin-btn admin-btn--primary" id="new-btn">+ New Post</a>
+    </div>
+
+    <ul class="content-list" id="content-list"></ul>
+  </div>
+
+  <script>
+    var currentTab = 'blog';
+
+    function switchTab(tab, el) {
+      currentTab = tab;
+      document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('tab--active'); });
+      el.classList.add('tab--active');
+      document.getElementById('new-btn').href = '/admin/editor.html?type=' + tab + '&new=1';
+      document.getElementById('new-btn').textContent = tab === 'blog' ? '+ New Post' : '+ New Project';
+      loadContent();
+    }
+
+    async function loadContent() {
+      var endpoint = currentTab === 'blog' ? '/admin/api/posts' : '/admin/api/projects';
+      var res = await fetch(endpoint);
+      if (res.status === 401) { window.location.href = '/admin/login.html'; return; }
+      var items = await res.json();
+
+      // For projects tab, fetch posts to count associations
+      var allPosts = [];
+      if (currentTab === 'projects') {
+        var postsRes = await fetch('/admin/api/posts');
+        allPosts = await postsRes.json();
+      }
+
+      var list = document.getElementById('content-list');
+      list.innerHTML = items.map(function(item) {
+        var draft = item.draft ? ' <span style="color: var(--accent-red);">[DRAFT]</span>' : '';
+        var date = item.date ? new Date(item.date).toLocaleDateString() : '';
+        var postCount = '';
+        if (currentTab === 'projects') {
+          var count = allPosts.filter(function(p) { return p.project === item.slug; }).length;
+          postCount = count + ' post' + (count !== 1 ? 's' : '') + ' &mdash; ';
+        }
+        return '<li class="content-item">' +
+          '<div class="content-item__info">' +
+            '<div class="content-item__title">' + item.title + draft + '</div>' +
+            '<div class="content-item__meta">' + postCount + (date || item.status || '') + ' &mdash; ' + item.slug + '</div>' +
+          '</div>' +
+          '<div class="content-item__actions">' +
+            '<a href="/admin/editor.html?type=' + currentTab + '&slug=' + item.slug + '" class="admin-btn">Edit</a>' +
+            '<button class="admin-btn admin-btn--danger" onclick="deleteItem(\'' + item.slug + '\')">Delete</button>' +
+          '</div>' +
+        '</li>';
+      }).join('');
+
+      if (items.length === 0) {
+        list.innerHTML = '<li class="content-item"><div class="content-item__meta">No content yet. Create your first entry!</div></li>';
+      }
+    }
+
+    async function deleteItem(slug) {
+      if (!confirm('Delete "' + slug + '"? This cannot be undone.')) return;
+      await fetch('/admin/api/content/' + currentTab + '/' + slug, { method: 'DELETE' });
+      loadContent();
+    }
+
+    async function logout() {
+      await fetch('/admin/logout', { method: 'POST' });
+      window.location.href = '/admin/login.html';
+    }
+
+    loadContent();
+
+    function toggleTheme() {
+      var html = document.documentElement;
+      var isDark = html.getAttribute('data-theme') === 'dark';
+      if (isDark) {
+        html.removeAttribute('data-theme');
+        localStorage.setItem('admin-theme', 'light');
+      } else {
+        html.setAttribute('data-theme', 'dark');
+        localStorage.setItem('admin-theme', 'dark');
+      }
+    }
+  </script>
+</body>
+</html>
