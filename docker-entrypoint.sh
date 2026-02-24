@@ -16,13 +16,29 @@ if [ -d "$APP_DIR/.git" ]; then
     git fetch origin
     git reset --hard origin/main
 else
-    echo "Cloning repository from GitHub..."
-    # Remove existing empty directory (created by WORKDIR)
-    if [ -d "$APP_DIR" ] && [ -z "$(ls -A $APP_DIR)" ]; then
-        rm -rf "$APP_DIR"
-    fi
-    git clone "$REPO_URL" "$APP_DIR"
+    echo "Cloning repository to temporary location..."
+    # Clone to temp directory first to avoid "directory exists" error
+    TEMP_APP_DIR="/tmp/app-clone"
+    rm -rf "$TEMP_APP_DIR"
+    git clone "$REPO_URL" "$TEMP_APP_DIR"
+    
+    # Move files to /app (preserving mounted volumes like content/ and public/images/)
+    echo "Moving cloned files to /app..."
+    cd "$TEMP_APP_DIR"
+    
+    # Copy all files except node_modules
+    for item in *; do
+        if [ "$item" != "node_modules" ]; then
+            cp -r "$item" "$APP_DIR/" || true
+        fi
+    done
+    
+    # Copy hidden files (like .gitignore)
+    cp -r .git "$APP_DIR/" 2>/dev/null || true
+    cp .gitignore "$APP_DIR/" 2>/dev/null || true
+    
     cd "$APP_DIR"
+    rm -rf "$TEMP_APP_DIR"
 fi
 
 # Setup SSH for content repo if deploy key is available
