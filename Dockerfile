@@ -20,7 +20,8 @@ WORKDIR /app
 # Install SSH client for git operations
 RUN apk add --no-cache openssh-client git
 
-# Copy node_modules from builder
+# Copy package files and node_modules from builder
+COPY package*.json ./
 COPY --from=builder /app/node_modules ./node_modules
 
 # Copy application code
