@@ -51,27 +51,16 @@ EOF
 if [ -n "$CONTENT_REPO_URL" ] && setup_ssh_for_content; then
     echo "SSH configured successfully, cloning content repository..."
     
-    # Safely remove old content directory with retries
+    # Remove old content and clone fresh
     if [ -d "$CONTENT_DIR" ]; then
         echo "Removing old content directory..."
-        for attempt in 1 2 3; do
-            if rm -rf "$CONTENT_DIR" 2>/dev/null; then
-                echo "Content directory removed successfully."
-                break
-            elif [ $attempt -lt 3 ]; then
-                echo "Attempt $attempt failed, waiting and retrying..."
-                sleep 2
-            else
-                echo "Warning: Could not fully remove old content directory, proceeding anyway..."
-                # Try to at least clear git state
-                if [ -d "$CONTENT_DIR/.git" ]; then
-                    cd "$CONTENT_DIR" && git clean -fd && cd /app || true
-                fi
-            fi
-        done
+        rm -rf "$CONTENT_DIR" 2>/dev/null || true
     fi
     
     git clone "$CONTENT_REPO_URL" "$CONTENT_DIR"
+    
+    # Ensure we're back in /app
+    cd /app
     echo "Content repository ready."
 else
     echo "No CONTENT_REPO_URL or deploy key found, skipping content repository clone."
