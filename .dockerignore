@@ -9,5 +9,6 @@
 !public/
 !admin/
 !config.json
+!config.json.example
 !docker-entrypoint.sh
 !Dockerfile
