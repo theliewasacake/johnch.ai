@@ -67,5 +67,14 @@
       "bgCode": "#1A1A1A",
       "shadow": "0 1px 3px rgba(0,0,0,0.3)"
     }
+  },
+  "effects": {
+    "glitch": {
+      "enabled": true,
+      "intervalMin": 3000,
+      "intervalMax": 8000,
+      "triggerOnHover": true
+    }
   }
 }
+

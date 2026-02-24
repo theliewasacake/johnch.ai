@@ -2,38 +2,17 @@ const express = require('express');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { syncToGit } = require('./git-sync');
 
 const router = express.Router();
 const CONTENT_DIR = path.join(__dirname, '..', 'content');
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
-// Git sync helper for images
-function syncImageToGit(filePath) {
-  try {
-    const relativePath = path.relative(CONTENT_DIR, filePath);
-    const message = `upload: ${relativePath}`;
-
-    execSync('git add -A', { cwd: CONTENT_DIR, stdio: 'pipe' });
-    execSync(`git commit -m "${message}"`, { cwd: CONTENT_DIR, stdio: 'pipe' });
-    execSync('git push', { cwd: CONTENT_DIR, stdio: 'pipe' });
-
-    console.log(`[git] Synced: ${message}`);
-    return { synced: true };
-  } catch (err) {
-    if (err.message?.includes('nothing to commit')) {
-      return { synced: true, message: 'No changes to commit' };
-    }
-    console.error('[git] Sync failed:', err.message);
-    return { synced: false, error: err.message };
-  }
-}
-
-// Configure storage - images go to content/images/ for git backup
+// Configure storage - images go to public/images/ (persisted via Docker volume)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const slug = req.params.slug;
-    const dir = path.join(CONTENT_DIR, 'images', slug);
+    const dir = path.join(PUBLIC_DIR, 'images', slug);
     fs.mkdirSync(dir, { recursive: true });
     cb(null, dir);
   },
@@ -68,25 +47,14 @@ router.post('/api/upload/:slug', upload.single('image'), (req, res) => {
   const slug = req.params.slug;
   const url = `/images/${slug}/${req.file.filename}`;
 
-  // Also copy to public/images for immediate serving (without build step)
-  try {
-    const publicDestDir = path.join(PUBLIC_DIR, 'images', slug);
-    fs.mkdirSync(publicDestDir, { recursive: true });
-    fs.copyFileSync(req.file.path, path.join(publicDestDir, req.file.filename));
-  } catch (err) {
-    console.error('[upload] Failed to copy to public:', err.message);
-  }
-
-  // Sync to git
-  const gitResult = syncImageToGit(req.file.path);
-
-  res.json({ ok: true, url, filename: req.file.filename, git: gitResult });
+  // Image is saved directly to public/images/ (Docker volume persists it)
+  res.json({ ok: true, url, filename: req.file.filename });
 });
 
 // List images for a slug
 router.get('/api/images/:slug', (req, res) => {
   const slug = req.params.slug;
-  const dir = path.join(CONTENT_DIR, 'images', slug);
+  const dir = path.join(PUBLIC_DIR, 'images', slug);
 
   if (!fs.existsSync(dir)) {
     return res.json([]);
@@ -138,7 +106,7 @@ router.post('/api/upload-resume', resumeUpload.single('resume'), (req, res) => {
   }
 
   // Sync to git
-  const gitResult = syncImageToGit(req.file.path);
+  const gitResult = syncToGit(req.file.path, 'upload');
 
   res.json({ ok: true, url: '/resume/resume.pdf', git: gitResult });
 });
@@ -151,15 +119,32 @@ router.get('/api/resume-status', (req, res) => {
 
 // --- Profile Photo Upload ---
 
+const PHOTO_EXT_MAP = {
+  'image/jpeg': '.jpg',
+  'image/png': '.png',
+  'image/gif': '.gif',
+  'image/webp': '.webp',
+};
+
 const photoStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    // Store in content/images/about/ for git backup
-    const contentDir = path.join(CONTENT_DIR, 'images', 'about');
-    fs.mkdirSync(contentDir, { recursive: true });
-    cb(null, contentDir);
+    // Store directly in public/images/about/ (persisted via Docker volume, not git)
+    const destDir = path.join(PUBLIC_DIR, 'images', 'about');
+    fs.mkdirSync(destDir, { recursive: true });
+
+    // Remove any existing photo.* files to avoid stale files with old extensions
+    try {
+      const files = fs.readdirSync(destDir);
+      for (const f of files) {
+        if (f.startsWith('photo.')) fs.unlinkSync(path.join(destDir, f));
+      }
+    } catch (e) { /* ignore */ }
+
+    cb(null, destDir);
   },
   filename: (req, file, cb) => {
-    cb(null, 'photo.jpg');
+    const ext = PHOTO_EXT_MAP[file.mimetype] || '.jpg';
+    cb(null, 'photo' + ext);
   }
 });
 
@@ -177,19 +162,8 @@ router.post('/api/upload-photo', photoUpload.single('photo'), (req, res) => {
     return res.status(400).json({ ok: false, error: 'No valid image uploaded' });
   }
 
-  // Copy to public/images/about/ for serving (this path is persisted via Docker volume)
-  try {
-    const publicDestDir = path.join(PUBLIC_DIR, 'images', 'about');
-    fs.mkdirSync(publicDestDir, { recursive: true });
-    fs.copyFileSync(req.file.path, path.join(publicDestDir, req.file.filename));
-  } catch (err) {
-    console.error('[upload] Failed to copy photo to public:', err.message);
-  }
-
-  // Sync to git
-  const gitResult = syncImageToGit(req.file.path);
-
-  res.json({ ok: true, url: '/images/about/photo.jpg', git: gitResult });
+  // Photo is saved directly to public/images/about/ (Docker volume persists it)
+  res.json({ ok: true, url: '/images/about/' + req.file.filename });
 });
 
 // --- Favicon Uploads ---
@@ -233,7 +207,7 @@ router.post('/api/upload-favicon', faviconUpload.single('favicon'), (req, res) =
   }
 
   // Sync to git
-  const gitResult = syncImageToGit(req.file.path);
+  const gitResult = syncToGit(req.file.path, 'upload');
 
   res.json({ ok: true, url: '/favicons/' + filename, git: gitResult });
 });

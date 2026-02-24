@@ -24,6 +24,8 @@ public/resume/
 public/favicons/
 public/graph-data.json
 public/rss.xml
+public/css/theme.css
+public/js/site-config.js
 
 # Claude
 .claude/

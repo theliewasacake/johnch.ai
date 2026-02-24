@@ -25,6 +25,11 @@ app.use(session({
   },
 }));
 
+// Serve content assets directly from content/ (git-synced, survives redeploy)
+// Images are served from public/ via Docker volume instead (not git-synced)
+app.use('/favicons', express.static(path.join(__dirname, '..', 'content', 'favicons')));
+app.use('/resume', express.static(path.join(__dirname, '..', 'content', 'resume')));
+
 // Serve static public files
 app.use(express.static(path.join(__dirname, '..', 'public')));
 

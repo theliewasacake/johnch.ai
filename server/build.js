@@ -133,7 +133,6 @@ function buildRelatedPostsSection(relatedSlugs, posts, currentPostSlug) {
   }
 
   const postCards = relatedPosts.map(p => {
-    const readTime = estimateReadingTime(p.rawContent);
     return `
       <a href="/blog/${p.slug}/" class="post-card--mini">
         <div class="post-card--mini__title">${p.title}</div>
@@ -173,8 +172,7 @@ function buildBlogPosts(posts, projects, partials) {
     const allRelatedSlugs = [...new Set([...explicitRelatedSlugs, ...linkedPostSlugs])];
 
     // Build related posts sections
-    const relatedPostsTop = buildRelatedPostsSection(allRelatedSlugs, posts, post.slug);
-    const relatedPostsBottom = buildRelatedPostsSection(allRelatedSlugs, posts, post.slug);
+    const relatedPostsHtml = buildRelatedPostsSection(allRelatedSlugs, posts, post.slug);
 
     const html = buildPage(template, {
       title: post.title,
@@ -183,8 +181,8 @@ function buildBlogPosts(posts, projects, partials) {
       tags: renderTags(post.tags),
       content: post.html,
       projectBanner,
-      relatedPostsTop,
-      relatedPostsBottom,
+      relatedPostsTop: relatedPostsHtml,
+      relatedPostsBottom: relatedPostsHtml,
       'nav-home': '',
       'nav-blog': 'nav__link--active',
       'nav-projects': '',
@@ -356,19 +354,9 @@ function buildProjectPages(projects, posts, partials) {
 function buildHomepage(posts, projects, partials) {
   const base = loadTemplate('base.html');
 
-  // Load homepage blurb from content/home.md
-  const homeFile = path.join(CONTENT_DIR, 'home.md');
-  let heroLabel = CONFIG.homepage.heroLabel;
-  let heroTitle = CONFIG.homepage.heroTitle;
-  let heroSubtitle = CONFIG.homepage.heroSubtitle;
-
-  if (fs.existsSync(homeFile)) {
-    const raw = fs.readFileSync(homeFile, 'utf-8');
-    const parsed = matter(raw);
-    if (parsed.data.label) heroLabel = parsed.data.label;
-    if (parsed.data.title) heroTitle = parsed.data.title;
-    if (parsed.data.subtitle) heroSubtitle = parsed.data.subtitle;
-  }
+  const heroLabel = CONFIG.homepage.heroLabel;
+  const heroTitle = CONFIG.homepage.heroTitle;
+  const heroSubtitle = CONFIG.homepage.heroSubtitle;
 
   const recentPosts = posts.slice(0, 3).map((p, i) => {
     const readTime = estimateReadingTime(p.rawContent);
@@ -476,10 +464,17 @@ function buildAboutPage(partials) {
   }
 
   // Build intro section with photo and contact
-  const photoPath = aboutData.photo || '/images/about/photo.jpg';
-  // Check both content/images/about/ and public/images/about/ for the photo
-  const photoExists = fs.existsSync(path.join(CONTENT_DIR, 'images', 'about', 'photo.jpg'))
-    || fs.existsSync(path.join(PUBLIC_DIR, 'images', 'about', 'photo.jpg'));
+  // Find photo file with any image extension (photos are in public/images/ via Docker volume)
+  const photoExts = ['.jpg', '.png', '.gif', '.webp'];
+  let detectedPhotoFile = null;
+  for (const ext of photoExts) {
+    if (fs.existsSync(path.join(PUBLIC_DIR, 'images', 'about', 'photo' + ext))) {
+      detectedPhotoFile = 'photo' + ext;
+      break;
+    }
+  }
+  const photoPath = aboutData.photo || (detectedPhotoFile ? '/images/about/' + detectedPhotoFile : '/images/about/photo.jpg');
+  const photoExists = !!detectedPhotoFile;
   
   let introSection = '';
   if (photoExists && contactItems.length > 0) {
@@ -690,6 +685,13 @@ function buildThemeCSS() {
   fs.mkdirSync(path.join(PUBLIC_DIR, 'css'), { recursive: true });
   fs.writeFileSync(path.join(PUBLIC_DIR, 'css', 'theme.css'), css);
   console.log('  Built: /css/theme.css');
+
+  // Generate site-config.js for client-side effects config
+  const effectsConfig = JSON.stringify(CONFIG.effects || {});
+  const configJs = `window.__SITE_CONFIG__ = { effects: ${effectsConfig} };`;
+  fs.mkdirSync(path.join(PUBLIC_DIR, 'js'), { recursive: true });
+  fs.writeFileSync(path.join(PUBLIC_DIR, 'js', 'site-config.js'), configJs);
+  console.log('  Built: /js/site-config.js');
 }
 
 // --- Helper Functions ---

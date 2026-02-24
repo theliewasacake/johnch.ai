@@ -73,6 +73,12 @@ else
     mkdir -p "$CONTENT_DIR"
 fi
 
+# Restore config.json from content repo if it exists
+if [ -f "$CONTENT_DIR/config.json" ]; then
+    echo "Restoring config.json from content repository..."
+    cp "$CONTENT_DIR/config.json" /app/config.json
+fi
+
 # Ensure images directory exists
 mkdir -p /app/public/images
 

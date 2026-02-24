@@ -6,17 +6,11 @@
   <title>Site Config</title>
   <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/global.css">
+  <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/panel-lines.css">
   <link rel="stylesheet" href="/css/glitch.css">
-  <script>
-    // Apply theme before render to prevent flash
-    (function() {
-      var theme = localStorage.getItem('admin-theme');
-      if (theme === 'dark' || (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.documentElement.setAttribute('data-theme', 'dark');
-      }
-    })();
-  </script>
+  <link rel="stylesheet" href="/admin/admin.css">
+  <script src="/admin/admin.js"></script>
   <style>
     .editor-header {
       display: flex;
@@ -47,32 +41,10 @@
       border-bottom: 1px solid var(--line-primary);
     }
     .field {
-      display: flex;
-      flex-direction: column;
-      gap: var(--space-xs);
       margin-bottom: var(--space-md);
     }
     .field:last-child {
       margin-bottom: 0;
-    }
-    .field__label {
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--text-muted);
-    }
-    .field__input {
-      font-family: var(--font-body);
-      font-size: 0.9rem;
-      padding: var(--space-sm) var(--space-md);
-      border: 1px solid var(--line-primary);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      outline: none;
-    }
-    .field__input:focus {
-      border-color: var(--accent-red);
     }
     .field__color {
       display: flex;
@@ -95,49 +67,12 @@
       color: var(--text-primary);
       outline: none;
     }
-    .field-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--space-md);
-    }
     .color-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: var(--space-md);
     }
-    .admin-btn {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: var(--space-sm) var(--space-lg);
-      border: 1px solid var(--line-primary);
-      background: transparent;
-      color: var(--text-secondary);
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.15s;
-    }
-    .admin-btn:hover {
-      border-color: var(--accent-red);
-      color: var(--accent-red);
-    }
-    .admin-btn--save {
-      border-color: var(--accent-red);
-      color: var(--accent-red);
-    }
-    .admin-btn--save:hover {
-      background: var(--accent-red);
-      color: #fff;
-    }
-    .status-msg {
-      font-family: var(--font-mono);
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      display: none;
-    }
-    .status-msg--error { color: var(--accent-red); }
-    .status-msg--success { color: #2a8a2a; }
+
     @media (max-width: 768px) {
       .field-row, .color-grid { grid-template-columns: 1fr; }
     }
@@ -245,6 +180,21 @@
         </div>
       </div>
 
+      <!-- Effects -->
+      <div class="section-group">
+        <div class="section-group__title">Effects</div>
+        <div class="field-row">
+          <div class="field" style="flex-direction: row; align-items: center; gap: var(--space-sm);">
+            <input type="checkbox" id="glitchEnabled" checked>
+            <label class="field__label" for="glitchEnabled">Enable Glitch Effects</label>
+          </div>
+          <div class="field" style="flex-direction: row; align-items: center; gap: var(--space-sm);">
+            <input type="checkbox" id="glitchHover" checked>
+            <label class="field__label" for="glitchHover">Trigger on Hover</label>
+          </div>
+        </div>
+      </div>
+
       <!-- Light Theme Colors -->
       <div class="section-group">
         <div class="section-group__title">Light Theme Colors</div>
@@ -329,6 +279,8 @@
       e.target.value = '';
     }
 
+    let loadedConfig = null;
+
     // Load config
     async function loadConfig() {
       try {
@@ -343,7 +295,7 @@
         }
 
         const config = await res.json();
-        console.log('Config loaded:', config);
+        loadedConfig = config;
 
         // Populate site info
         document.getElementById('siteName').value = config.site?.name || '';
@@ -364,13 +316,13 @@
 
         // Populate color inputs
         if (config.theme) {
-          console.log('Populating colors - Light theme colors:', config.theme.light);
-          console.log('Populating colors - Dark theme colors:', config.theme.dark);
           populateColorInputs('light', config.theme.light || {});
           populateColorInputs('dark', config.theme.dark || {});
-        } else {
-          console.warn('No theme data in config');
         }
+
+        // Populate effects settings
+        document.getElementById('glitchEnabled').checked = config.effects?.glitch?.enabled !== false;
+        document.getElementById('glitchHover').checked = config.effects?.glitch?.triggerOnHover !== false;
 
         // Load favicon status
         loadFaviconsStatus();
@@ -384,10 +336,8 @@
 
     function populateColorInputs(theme, colors) {
       const container = document.getElementById(theme + '-colors');
-      console.log(`Populating ${theme} colors, container:`, container);
       const html = Object.entries(colorFields).map(([key, label]) => {
         const value = colors[key] || '';
-        console.log(`  ${key}: ${value}`);
         return `
           <div class="field">
             <label class="field__label">${label}</label>
@@ -398,9 +348,7 @@
           </div>
         `;
       }).join('');
-      console.log(`Generated HTML length for ${theme}:`, html.length);
       container.innerHTML = html;
-      console.log(`${theme} colors populated`);
     }
 
     function hexToColor(value) {
@@ -436,6 +384,10 @@
           darkColors[key] = document.getElementById('dark-' + key + '-value').value;
         });
 
+        // Preserve non-editable theme fields (shadow)
+        if (loadedConfig?.theme?.light?.shadow) lightColors.shadow = loadedConfig.theme.light.shadow;
+        if (loadedConfig?.theme?.dark?.shadow) darkColors.shadow = loadedConfig.theme.dark.shadow;
+
         const config = {
           site: {
             name: document.getElementById('siteName').value,
@@ -466,6 +418,14 @@
           theme: {
             light: lightColors,
             dark: darkColors
+          },
+          effects: {
+            glitch: {
+              enabled: document.getElementById('glitchEnabled').checked,
+              triggerOnHover: document.getElementById('glitchHover').checked,
+              intervalMin: 3000,
+              intervalMax: 8000
+            }
           }
         };
 
@@ -495,17 +455,6 @@
       setTimeout(function() { statusEl.style.display = 'none'; }, 3000);
     }
 
-    function toggleTheme() {
-      var html = document.documentElement;
-      var isDark = html.getAttribute('data-theme') === 'dark';
-      if (isDark) {
-        html.removeAttribute('data-theme');
-        localStorage.setItem('admin-theme', 'light');
-      } else {
-        html.setAttribute('data-theme', 'dark');
-        localStorage.setItem('admin-theme', 'dark');
-      }
-    }
 
     loadConfig();
   </script>

@@ -27,18 +27,15 @@
   opacity: 0;
 }
 
-/* Light theme - white particles */
-@media (prefers-color-scheme: light) {
-  .glitch-particle {
-    background: #ff0000 !important;
-  }
+/* Light theme - red particles */
+:root .glitch-particle,
+[data-theme="light"] .glitch-particle {
+  background: #ff0000 !important;
 }
 
-/* Dark theme - red particles */
-@media (prefers-color-scheme: dark) {
-  .glitch-particle {
-    background: #ffffff !important;
-  }
+/* Dark theme - white particles */
+[data-theme="dark"] .glitch-particle {
+  background: #ffffff !important;
 }
 
 /* Glitch animations with randomized offsets and hue shifts */

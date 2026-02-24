@@ -29,7 +29,7 @@ COPY server/ ./server/
 COPY templates/ ./templates/
 COPY public/ ./public/
 COPY admin/ ./admin/
-COPY config.json* ./
+COPY config.json.example ./config.json.example
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /entrypoint.sh

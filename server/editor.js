@@ -1,45 +1,12 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 const matter = require('gray-matter');
 const { build } = require('./build');
-
-// Load config
-function loadConfig() {
-  const configPath = path.join(__dirname, '..', 'config.json');
-  if (fs.existsSync(configPath)) {
-    return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
-  }
-  return { author: { name: 'Author Name' } };
-}
-
-const CONFIG = loadConfig();
+const { syncToGit } = require('./git-sync');
 
 const router = express.Router();
 const CONTENT_DIR = path.join(__dirname, '..', 'content');
-
-// Git sync helper - commits and pushes content changes
-function syncToGit(filePath, action = 'update') {
-  try {
-    const relativePath = path.relative(CONTENT_DIR, filePath);
-    const message = `${action}: ${relativePath}`;
-
-    execSync(`git add -A`, { cwd: CONTENT_DIR, stdio: 'pipe' });
-    execSync(`git commit -m "${message}"`, { cwd: CONTENT_DIR, stdio: 'pipe' });
-    execSync('git push', { cwd: CONTENT_DIR, stdio: 'pipe' });
-
-    console.log(`[git] Synced: ${message}`);
-    return { synced: true };
-  } catch (err) {
-    // If there's nothing to commit, that's fine
-    if (err.message?.includes('nothing to commit')) {
-      return { synced: true, message: 'No changes to commit' };
-    }
-    console.error('[git] Sync failed:', err.message);
-    return { synced: false, error: err.message };
-  }
-}
 
 // List all posts
 router.get('/api/posts', (req, res) => {
@@ -151,39 +118,6 @@ function listContent(type) {
     })
     .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
 }
-
-// Get homepage content
-router.get('/api/content/home', (req, res) => {
-  const filePath = path.join(CONTENT_DIR, 'home.md');
-  if (!fs.existsSync(filePath)) {
-    return res.json({ label: 'System Online', title: `[PLACEHOLDER] ${CONFIG.author.name}`, subtitle: '[PLACEHOLDER] Update your tagline here. This is a default fallback when home.md doesn\'t exist.', content: '' });
-  }
-  const raw = fs.readFileSync(filePath, 'utf-8');
-  const { data, content } = matter(raw);
-  res.json({ ...data, content });
-});
-
-// Save homepage content
-router.post('/api/content/home', express.json(), (req, res) => {
-  const { frontmatter, content } = req.body;
-  if (!frontmatter) {
-    return res.status(400).json({ error: 'Missing frontmatter' });
-  }
-
-  fs.mkdirSync(CONTENT_DIR, { recursive: true });
-  const filePath = path.join(CONTENT_DIR, 'home.md');
-  const fileContent = matter.stringify(content || '', frontmatter);
-  fs.writeFileSync(filePath, fileContent);
-
-  try {
-    build();
-  } catch (err) {
-    return res.status(500).json({ ok: false, error: 'Saved but rebuild failed: ' + err.message });
-  }
-
-  const gitResult = syncToGit(filePath, 'save');
-  res.json({ ok: true, message: 'Saved and rebuilt', git: gitResult });
-});
 
 // Get about page content
 router.get('/api/content/about', (req, res) => {

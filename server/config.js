@@ -2,9 +2,11 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const { build } = require('./build');
+const { syncToGit } = require('./git-sync');
 
 const router = express.Router();
 const ROOT = path.join(__dirname, '..');
+const CONTENT_DIR = path.join(ROOT, 'content');
 const CONFIG_PATH = path.join(ROOT, 'config.json');
 
 // Get current config (with fallback defaults)
@@ -20,6 +22,7 @@ router.get('/api/config', (req, res) => {
         about: { title: 'About', description: '' }
       },
       rss: { title: 'My Site', description: 'Articles' },
+      effects: { glitch: { enabled: true, intervalMin: 3000, intervalMax: 8000, triggerOnHover: true } },
       theme: {
         light: {
           bgPrimary: '#F8F8F6', bgSecondary: '#EEEEE8', bgTertiary: '#E4E4DC',
@@ -52,7 +55,8 @@ router.get('/api/config', (req, res) => {
         theme: {
           light: { ...defaultConfig.theme.light, ...(config.theme?.light || {}) },
           dark: { ...defaultConfig.theme.dark, ...(config.theme?.dark || {}) }
-        }
+        },
+        effects: { glitch: { ...defaultConfig.effects.glitch, ...(config.effects?.glitch || {}) } }
       };
       res.json(merged);
     } else {
@@ -73,8 +77,14 @@ router.post('/api/config', express.json(), (req, res) => {
       return res.status(400).json({ error: 'Missing required config fields' });
     }
 
-    // Write config
-    fs.writeFileSync(CONFIG_PATH, JSON.stringify(config, null, 2));
+    // Write config to app root (used by build)
+    const configStr = JSON.stringify(config, null, 2);
+    fs.writeFileSync(CONFIG_PATH, configStr);
+
+    // Also save to content dir for git persistence across deploys
+    const contentConfigPath = path.join(CONTENT_DIR, 'config.json');
+    fs.mkdirSync(CONTENT_DIR, { recursive: true });
+    fs.writeFileSync(contentConfigPath, configStr);
 
     // Trigger rebuild to apply theme changes
     try {
@@ -83,7 +93,10 @@ router.post('/api/config', express.json(), (req, res) => {
       return res.status(500).json({ ok: false, error: 'Saved but rebuild failed: ' + err.message });
     }
 
-    res.json({ ok: true, message: 'Config saved and rebuilt' });
+    // Sync config to git
+    const gitResult = syncToGit(contentConfigPath, 'save');
+
+    res.json({ ok: true, message: 'Config saved and rebuilt', git: gitResult });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

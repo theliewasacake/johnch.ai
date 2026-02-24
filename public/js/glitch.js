@@ -14,36 +14,22 @@ class GlitchEffects {
     this.init();
   }
 
-  async init() {
-    try {
-      // Load configuration
-      const response = await fetch('/config.json');
-      const config = await response.json();
-      
-      this.config = config.effects?.glitch || {
-        enabled: true,
-        intervalMin: 3000,
-        intervalMax: 8000,
-        triggerOnHover: true
-      };
+  init() {
+    // Read from build-generated config instead of fetching config.json
+    const siteConfig = window.__SITE_CONFIG__ || {};
+    this.config = siteConfig.effects?.glitch || {
+      enabled: true,
+      intervalMin: 3000,
+      intervalMax: 8000,
+      triggerOnHover: true
+    };
 
-      if (!this.config.enabled) {
-        return;
-      }
-
-      this.isEnabled = true;
-      this.setupGlitchElements();
-    } catch (error) {
-      console.warn('Glitch effect: Could not load config, using defaults', error);
-      this.isEnabled = true;
-      this.config = {
-        enabled: true,
-        intervalMin: 3000,
-        intervalMax: 8000,
-        triggerOnHover: true
-      };
-      this.setupGlitchElements();
+    if (!this.config.enabled) {
+      return;
     }
+
+    this.isEnabled = true;
+    this.setupGlitchElements();
   }
 
   setupGlitchElements() {
@@ -198,7 +184,8 @@ class GlitchEffects {
     const rect = container.getBoundingClientRect();
     
     // Detect current theme
-    const isDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDarkTheme = document.documentElement.getAttribute('data-theme') === 'dark' || 
+      (!document.documentElement.getAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
     
     for (let i = 0; i < particleCount; i++) {
       const particle = document.createElement('div');
