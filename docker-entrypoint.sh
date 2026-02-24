@@ -17,6 +17,10 @@ if [ -d "$APP_DIR/.git" ]; then
     git reset --hard origin/main
 else
     echo "Cloning repository from GitHub..."
+    # Remove existing empty directory (created by WORKDIR)
+    if [ -d "$APP_DIR" ] && [ -z "$(ls -A $APP_DIR)" ]; then
+        rm -rf "$APP_DIR"
+    fi
     git clone "$REPO_URL" "$APP_DIR"
     cd "$APP_DIR"
 fi
