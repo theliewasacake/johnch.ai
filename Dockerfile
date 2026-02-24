@@ -28,6 +28,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY server/ ./server/
 COPY templates/ ./templates/
 COPY public/ ./public/
+COPY admin/ ./admin/
 COPY config.json* ./
 
 # Copy entrypoint script

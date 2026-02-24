@@ -7,5 +7,7 @@
 !server/
 !templates/
 !public/
+!admin/
+!config.json
 !docker-entrypoint.sh
 !Dockerfile
