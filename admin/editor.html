@@ -303,7 +303,10 @@
       document.getElementById('blog-fields').style.display = 'none';
       document.getElementById('project-fields').style.display = 'none';
       document.getElementById('slug').closest('.field').style.display = 'none';
-      document.getElementById('resume-upload-section').style.display = 'block';
+      var resumeSection = document.getElementById('resume-upload-section');
+      resumeSection.style.display = 'flex';
+      resumeSection.style.flexDirection = 'column';
+      resumeSection.style.gap = 'var(--space-lg)';
       loadResumeStatus();
     } else if (contentType === 'home') {
       document.getElementById('blog-fields').style.display = 'none';

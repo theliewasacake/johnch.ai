@@ -55,9 +55,15 @@ app.post('/admin/logout', (req, res) => {
   res.json({ ok: true });
 });
 
-// Admin static files (behind auth, except login page)
+// Admin static files (behind auth, except login page and shared assets)
 app.get('/admin/login.html', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'admin', 'login.html'));
+});
+app.get('/admin/admin.css', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'admin', 'admin.css'));
+});
+app.get('/admin/admin.js', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'admin', 'admin.js'));
 });
 
 // All other admin routes require auth
