@@ -29,6 +29,10 @@ COPY templates/ ./templates/
 COPY public/ ./public/
 COPY config.json* ./
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 # Create directories for mounted volumes
 RUN mkdir -p /app/content /app/public/images
 
@@ -42,5 +46,5 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
   CMD wget -q --spider http://localhost:3000 || exit 1
 
-# Simple startup
-CMD ["npm", "start"]
+# Use entrypoint script instead of direct npm start
+ENTRYPOINT ["/entrypoint.sh"]

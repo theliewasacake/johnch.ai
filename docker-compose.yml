@@ -18,11 +18,11 @@ services:
       - SESSION_SECRET=${SESSION_SECRET}
       # Content repo URL (optional - only if using separate content repo)
       - CONTENT_REPO_URL=${CONTENT_REPO_URL}
+      # Base64-encoded deploy key for private content repo
+      - CONTENT_DEPLOY_KEY=${CONTENT_DEPLOY_KEY}
     volumes:
       # Persist uploaded images only (content is cloned fresh from git)
       - images_data:/app/public/images
-      # Optional: Deploy key for private content repo
-      # - ~/.ssh/content_deploy_key:/secrets/content_deploy_key:ro
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000"]
       interval: 30s
