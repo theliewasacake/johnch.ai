@@ -17,6 +17,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Install SSH client for git operations
+RUN apk add --no-cache openssh-client git
+
 # Copy node_modules from builder
 COPY --from=builder /app/node_modules ./node_modules
 
