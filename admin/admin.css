@@ -7,10 +7,16 @@
   letter-spacing: 0.05em;
   padding: var(--space-sm) var(--space-lg);
   border: 1px solid var(--line-primary);
+  border-radius: 0;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-appearance: none;
+  appearance: none;
   transition: border-color 0.15s, color 0.15s;
 }
 
@@ -35,7 +41,7 @@
 }
 
 .admin-btn--danger {
-  border-color: transparent;
+  border-color: var(--line-primary);
   color: var(--text-muted);
 }
 

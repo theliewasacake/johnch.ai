@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Aldrich&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/theme.css">
   <link rel="stylesheet" href="/css/panel-lines.css">
@@ -12,25 +14,6 @@
   <link rel="stylesheet" href="/admin/admin.css">
   <script src="/admin/admin.js"></script>
   <style>
-    .theme-toggle {
-      position: fixed;
-      top: var(--space-md);
-      right: var(--space-md);
-      font-family: var(--font-mono);
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      padding: var(--space-xs) var(--space-sm);
-      border: 1px solid var(--line-primary);
-      background: transparent;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: border-color 0.15s, color 0.15s;
-    }
-    .theme-toggle:hover {
-      border-color: var(--accent-red);
-      color: var(--accent-red);
-    }
     .login-container {
       max-width: 360px;
       margin: 20vh auto;
@@ -41,56 +24,30 @@
       flex-direction: column;
       gap: var(--space-md);
     }
-    .login-input {
-      font-family: var(--font-mono);
-      font-size: 0.85rem;
-      padding: var(--space-sm) var(--space-md);
-      border: 1px solid var(--line-primary);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      outline: none;
-    }
-    .login-input:focus {
-      border-color: var(--accent-red);
-    }
-    .login-btn {
-      font-family: var(--font-heading);
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      padding: var(--space-sm) var(--space-md);
-      border: 1px solid var(--line-accent);
-      background: transparent;
-      color: var(--text-primary);
-      cursor: pointer;
-      transition: background 0.15s, color 0.15s;
-    }
-    .login-btn:hover {
-      background: var(--accent-red);
-      border-color: var(--accent-red);
-      color: #fff;
-    }
     .login-error {
       color: var(--accent-red);
       font-family: var(--font-mono);
       font-size: 0.75rem;
       display: none;
     }
+    .login-theme-toggle {
+      position: fixed;
+      top: var(--space-md);
+      right: var(--space-md);
+    }
   </style>
   <script src="/js/glitch.js"></script>
 </head>
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
-    <span id="theme-icon">◐</span>
-  </button>
+  <button class="admin-btn login-theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">◐</button>
   <div class="login-container">
     <div class="panel panel--greeble">
       <div class="section-header__label">System Access</div>
       <h1 style="margin-bottom: var(--space-lg);">Admin Login</h1>
       <form class="login-form" onsubmit="handleLogin(event)">
-        <input type="password" class="login-input" id="password" placeholder="Password" autocomplete="current-password" required>
+        <input type="password" class="field__input" id="password" placeholder="Password" autocomplete="current-password" required>
         <div class="login-error" id="error">Invalid password</div>
-        <button type="submit" class="login-btn">Authenticate</button>
+        <button type="submit" class="admin-btn admin-btn--save">Authenticate</button>
       </form>
     </div>
   </div>
