@@ -1,14 +1,30 @@
-# Lightweight runtime image that clones code from GitHub on start
+# Multi-stage build: build dependencies + app
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Install build dependencies for bcrypt
+RUN apk add --no-cache python3 make g++
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including dev)
+RUN npm ci
+
+# Final runtime image
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Install git and build dependencies for bcrypt
-RUN apk add --no-cache git python3 make g++
+# Copy node_modules from builder
+COPY --from=builder /app/node_modules ./node_modules
 
-# Copy only the entrypoint script
-COPY docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
+# Copy application code
+COPY server/ ./server/
+COPY templates/ ./templates/
+COPY public/ ./public/
+COPY config.json* ./
 
 # Create directories for mounted volumes
 RUN mkdir -p /app/content /app/public/images
@@ -16,9 +32,12 @@ RUN mkdir -p /app/content /app/public/images
 # Environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
-# Override this with your repo URL (required for Docker deployments)
-ENV REPO_URL=
 
 EXPOSE 3000
 
-ENTRYPOINT ["/docker-entrypoint.sh"]
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 --start-period=60s \
+  CMD wget -q --spider http://localhost:3000 || exit 1
+
+# Simple startup
+CMD ["npm", "start"]

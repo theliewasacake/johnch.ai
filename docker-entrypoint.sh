@@ -1,45 +1,11 @@
 #!/bin/sh
 set -e
 
-REPO_URL="${REPO_URL}"
 CONTENT_REPO_URL="${CONTENT_REPO_URL}"
-APP_DIR="/app"
 CONTENT_DIR="/app/content"
 DEPLOY_KEY_FILE="/secrets/content_deploy_key"
 
-echo "=== Blog container starting ==="
-
-# Clone or pull the latest code
-if [ -d "$APP_DIR/.git" ]; then
-    echo "Pulling latest changes from GitHub..."
-    cd "$APP_DIR"
-    git fetch origin
-    git reset --hard origin/main
-else
-    echo "Cloning repository to temporary location..."
-    # Clone to temp directory first to avoid "directory exists" error
-    TEMP_APP_DIR="/tmp/app-clone"
-    rm -rf "$TEMP_APP_DIR"
-    git clone "$REPO_URL" "$TEMP_APP_DIR"
-    
-    # Move files to /app (preserving mounted volumes like content/ and public/images/)
-    echo "Moving cloned files to /app..."
-    cd "$TEMP_APP_DIR"
-    
-    # Copy all files except node_modules
-    for item in *; do
-        if [ "$item" != "node_modules" ]; then
-            cp -r "$item" "$APP_DIR/" || true
-        fi
-    done
-    
-    # Copy hidden files (like .gitignore)
-    cp -r .git "$APP_DIR/" 2>/dev/null || true
-    cp .gitignore "$APP_DIR/" 2>/dev/null || true
-    
-    cd "$APP_DIR"
-    rm -rf "$TEMP_APP_DIR"
-fi
+echo "=== Blog container starting (prebuild mode) ==="
 
 # Setup SSH for content repo if deploy key is available
 setup_ssh_for_content() {
@@ -81,8 +47,8 @@ EOF
     return 0
 }
 
-# Clone or pull the content repository
-if setup_ssh_for_content; then
+# Clone or pull the content repository (only needed if separate content repo exists)
+if [ -n "$CONTENT_REPO_URL" ] && setup_ssh_for_content; then
     echo "SSH configured successfully, cloning/pulling content repository..."
 
     if [ -d "$CONTENT_DIR/.git" ]; then
@@ -90,31 +56,26 @@ if setup_ssh_for_content; then
         cd "$CONTENT_DIR"
         git fetch origin
         git reset --hard origin/main
-        cd "$APP_DIR"
     else
         echo "Cloning content repository..."
-        # Remove directory if it exists but isn't a git repo
-        rm -rf "$CONTENT_DIR"
         git clone "$CONTENT_REPO_URL" "$CONTENT_DIR"
     fi
 
     echo "Content repository ready."
 else
-    echo "No deploy key found, skipping content repository clone."
+    echo "No CONTENT_REPO_URL or deploy key found, skipping content repository clone."
     echo "Ensuring content directory exists..."
     mkdir -p "$CONTENT_DIR"
 fi
 
-# Install/update dependencies
-echo "Installing dependencies..."
-npm ci --only=production
-
 # Ensure images directory exists
 mkdir -p /app/public/images
 
-# Build static files from content
-echo "Building static site..."
-npm run build
+# Build static files from content (if content exists)
+if [ -d "$CONTENT_DIR" ] && [ "$(ls -A $CONTENT_DIR)" ]; then
+    echo "Building static site from content..."
+    npm run build
+fi
 
 # Start the server
 echo "Starting server..."
