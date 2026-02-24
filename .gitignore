@@ -8,6 +8,8 @@ node_modules/
 .env
 config.json
 *.log
+content_deploy_key
+content_deploy_key.pub
 
 # Secrets (deploy keys, credentials)
 secrets/

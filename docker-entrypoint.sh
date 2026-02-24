@@ -47,20 +47,12 @@ EOF
     return 0
 }
 
-# Clone or pull the content repository (only needed if separate content repo exists)
+# Clone the content repository (fresh clone each deployment)
 if [ -n "$CONTENT_REPO_URL" ] && setup_ssh_for_content; then
-    echo "SSH configured successfully, cloning/pulling content repository..."
-
-    if [ -d "$CONTENT_DIR/.git" ]; then
-        echo "Pulling latest content changes..."
-        cd "$CONTENT_DIR"
-        git fetch origin
-        git reset --hard origin/main
-    else
-        echo "Cloning content repository..."
-        git clone "$CONTENT_REPO_URL" "$CONTENT_DIR"
-    fi
-
+    echo "SSH configured successfully, cloning content repository..."
+    # Always start fresh since content dir is not persisted
+    rm -rf "$CONTENT_DIR"
+    git clone "$CONTENT_REPO_URL" "$CONTENT_DIR"
     echo "Content repository ready."
 else
     echo "No CONTENT_REPO_URL or deploy key found, skipping content repository clone."
